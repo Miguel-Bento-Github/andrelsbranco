@@ -6,27 +6,69 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import MasonryGrid from '../components/MasonryGrid.astro';
 
-// Fetch overview content
+// Fetch overview content first, fallback to featured items if empty
 const allOverview = await getCollection('overview');
 
-// Sort by order (if specified) then by date
-const sortedOverview = allOverview.sort((a, b) => {
-  if (a.data.order !== b.data.order) {
-    return a.data.order - b.data.order;
-  }
-  return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
-});
+let images;
 
-// Map to image format expected by MasonryGrid
-const images = sortedOverview.map((item) => ({
-  id: item.id,
-  src: item.data.image,
-  thumbnail: item.data.thumbnail,
-  alt: item.data.title,
-  width: item.data.width,
-  height: item.data.height,
-  date: item.data.date
-}));
+if (allOverview.length > 0) {
+  // Use overview collection if it has content
+  const sortedOverview = allOverview.sort((a, b) => {
+    if (a.data.order !== b.data.order) {
+      return a.data.order - b.data.order;
+    }
+    return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
+  });
+
+  images = sortedOverview.map((item) => ({
+    id: item.id,
+    src: item.data.image,
+    thumbnail: item.data.thumbnail,
+    alt: item.data.title,
+    width: item.data.width,
+    height: item.data.height,
+    date: item.data.date
+  }));
+} else {
+  // Fallback to featured items from all collections
+  const portraits = await getCollection('portraits', ({ data }) => data.featured);
+  const bitsPieces = await getCollection('bits-pieces', ({ data }) => data.featured);
+  const film = await getCollection('film', ({ data }) => data.featured);
+
+  const allFeatured = [
+    ...portraits.map(item => ({
+      id: item.id,
+      src: item.data.image,
+      thumbnail: item.data.thumbnail,
+      alt: item.data.title,
+      width: item.data.width,
+      height: item.data.height,
+      date: item.data.date
+    })),
+    ...bitsPieces.map(item => ({
+      id: item.id,
+      src: item.data.image,
+      thumbnail: item.data.thumbnail,
+      alt: item.data.title,
+      width: item.data.width,
+      height: item.data.height,
+      date: item.data.date
+    })),
+    ...film.map(item => ({
+      id: item.id,
+      src: item.data.thumbnail,
+      alt: item.data.title,
+      width: item.data.thumbnailWidth,
+      height: item.data.thumbnailHeight,
+      date: item.data.date
+    }))
+  ];
+
+  // Sort by date (newest first)
+  images = allFeatured.sort((a, b) =>
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+}
 
 // Fallback to sample images if no content uploaded yet
 const sampleImages = [

@@ -27,6 +27,8 @@ const { images } = Astro.props;
       <img
         src={img.thumbnail || img.src}
         alt={img.alt}
+        width={img.width}
+        height={img.height}
         class="masonry-image w-full h-auto object-cover rounded-lg block bg-gray-200 dark:bg-gray-800"
         loading="lazy"
       />

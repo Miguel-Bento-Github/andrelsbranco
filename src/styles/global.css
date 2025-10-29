@@ -19,17 +19,6 @@
     @apply bg-[#f5f5f5] text-[#1a1a1a];
   }
 
-  html.light section {
-    @apply bg-[#f5f5f5] text-[#1a1a1a];
-  }
-
-  html.light h1,
-  html.light h2,
-  html.light h3,
-  html.light p {
-    @apply text-[#1a1a1a];
-  }
-
   html.light .masonry-item {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
@@ -65,11 +54,6 @@
 
   html.light label {
     @apply text-gray-700;
-  }
-
-  /* Light theme sidebar */
-  html.light #sidebar {
-    @apply bg-white text-[#1a1a1a];
   }
 
 }

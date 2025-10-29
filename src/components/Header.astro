@@ -10,11 +10,11 @@ const navItems = [
 
 <!-- Desktop Menu - Hidden on mobile -->
 <nav class="hidden md:block fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-  <div id="desktopNav" class="bg-black/30 backdrop-blur-sm rounded-full px-2 py-2 flex items-center gap-2">
+  <div id="desktopNav" class="bg-black/30 backdrop-blur-sm rounded-full px-2 py-2 flex items-center gap-2 text-white">
     <!-- Toggle Button with Icons -->
     <button
       id="navToggle"
-      class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all flex-shrink-0"
+      class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all flex-shrink-0"
       aria-label="Toggle menu"
     >
       <svg id="minusIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -29,7 +29,7 @@ const navItems = [
       {navItems.map((item) => (
         <a
           href={item.href}
-          class="nav-link px-4 py-2 rounded-full transition-all duration-300 text-sm whitespace-nowrap font-medium text-white"
+          class="nav-link px-4 py-2 rounded-full transition-all duration-300 text-sm whitespace-nowrap font-medium"
         >
           {item.label}
         </a>
@@ -40,7 +40,7 @@ const navItems = [
         href="https://www.instagram.com/andrethetraveler/"
         target="_blank"
         rel="noopener noreferrer"
-        class="ml-2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+        class="ml-2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
         aria-label="Instagram"
       >
         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -51,7 +51,7 @@ const navItems = [
       <!-- Theme Toggle -->
       <button
         id="themeToggle"
-        class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+        class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
         aria-label="Toggle theme"
       >
         <svg id="sunIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,7 +68,7 @@ const navItems = [
 <!-- Mobile Hamburger Button -->
 <button
   id="hamburger"
-  class="md:hidden fixed bottom-6 right-6 w-12 h-12 bg-[#2a2a2a]/90 light:bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center z-50 text-white light:text-gray-800"
+  class="md:hidden fixed bottom-6 right-6 w-12 h-12 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center z-50 text-white"
   aria-label="Open menu"
 >
   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,7 +85,7 @@ const navItems = [
 <!-- Mobile Sidebar -->
 <aside
   id="sidebar"
-  class="fixed top-0 right-0 h-full w-64 bg-[#0a0a0a] z-[70] translate-x-full transition-transform duration-300 shadow-2xl"
+  class="fixed top-0 right-0 h-full w-64 z-[70] translate-x-full transition-transform duration-300 shadow-2xl"
 >
   <div class="flex flex-col h-full">
     <!-- Close button -->
@@ -333,14 +333,14 @@ const navItems = [
 
       if (isActive) {
         link.classList.add('bg-[#e8e5a0]', 'text-black');
-        link.classList.remove('text-white', 'hover:text-white', 'hover:bg-white/10');
+        link.classList.remove('hover:bg-white/10');
         // For desktop nav, add font-medium if not present
         if (!link.classList.contains('py-3')) {
           link.classList.add('font-medium');
         }
       } else {
         link.classList.remove('bg-[#e8e5a0]', 'text-black', 'font-medium');
-        link.classList.add('text-white', 'hover:text-white', 'hover:bg-white/10');
+        link.classList.add('hover:bg-white/10');
       }
 
       // Re-enable transition after a frame

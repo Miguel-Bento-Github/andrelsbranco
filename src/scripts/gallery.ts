@@ -17,7 +17,7 @@ const createSlide = (img: Image, index: number): string => {
   const isVideoFile = isVideo(img.src);
 
   return `
-  <div class="gallery-slide snap-start flex-shrink-0 w-screen h-screen flex items-center justify-center px-4 py-4" data-index="${index}">
+  <div class="gallery-slide snap-start flex-shrink-0 w-screen h-[100dvh] flex items-center justify-center px-4 py-4" data-index="${index}">
     ${isVideoFile
       ? `<video controls class="w-full h-full object-contain" playsinline preload="metadata">
            <source src="${img.src}" type="video/mp4">
@@ -32,7 +32,7 @@ const createSlide = (img: Image, index: number): string => {
 
 // Small helper: create overlay HTML
 const createOverlayHTML = (images: Image[], startIndex: number): string => `
-  <div id="gallery-overlay" class="fixed inset-0 z-[100] bg-black/30 backdrop-blur-xl opacity-0">
+  <div id="gallery-overlay" class="fixed inset-0 z-[100] bg-black/30 backdrop-blur-xl opacity-0 h-[100dvh] w-full">
     <!-- Close button -->
     <button id="gallery-close" class="absolute top-6 right-6 z-10 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

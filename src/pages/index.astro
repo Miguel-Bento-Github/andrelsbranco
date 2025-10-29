@@ -97,6 +97,16 @@ const images = [
     const items = Array.from(document.querySelectorAll('.masonry-item'));
     const images = items.map(getImageData);
     bindClicks(items, images);
+
+    // Check for photo parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const photoParam = urlParams.get('photo');
+    if (photoParam) {
+      const photoIndex = parseInt(photoParam, 10) - 1;
+      if (photoIndex >= 0 && photoIndex < images.length) {
+        openGallery(images, photoIndex);
+      }
+    }
   };
 
   // Run on load

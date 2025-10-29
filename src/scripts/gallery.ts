@@ -8,14 +8,14 @@ interface Image {
 
 // Small helper: create slide HTML
 const createSlide = (img: Image, index: number): string => `
-  <div class="gallery-slide snap-start flex-shrink-0 w-screen h-screen flex items-center justify-center" data-index="${index}">
-    <img src="${img.src}" alt="${img.alt}" class="max-h-screen max-w-full object-contain" />
+  <div class="gallery-slide snap-start flex-shrink-0 w-screen h-screen flex items-center justify-center px-4 py-4" data-index="${index}">
+    <img src="${img.src}" alt="${img.alt}" class="w-full h-full object-contain" />
   </div>
 `;
 
 // Small helper: create overlay HTML
 const createOverlayHTML = (images: Image[], startIndex: number): string => `
-  <div id="gallery-overlay" class="fixed inset-0 z-[100] bg-black/95 opacity-0">
+  <div id="gallery-overlay" class="fixed inset-0 z-[100] bg-black/30 backdrop-blur-xl opacity-0">
     <!-- Close button -->
     <button id="gallery-close" class="absolute top-6 right-6 z-10 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,6 +85,13 @@ const updateCounter = (current: number) => {
   }
 };
 
+// Small helper: update URL with current index
+const updateURL = (index: number) => {
+  const url = new URL(window.location.href);
+  url.searchParams.set('photo', String(index + 1));
+  window.history.pushState({ photoIndex: index }, '', url.toString());
+};
+
 // Small helper: calculate next index
 const nextIndex = (current: number, total: number): number =>
   (current + 1) % total;
@@ -146,30 +153,46 @@ export function openGallery(images: Image[], startIndex = 0) {
     currentIndex = nextIndex(currentIndex, images.length);
     scrollToIndex(container, currentIndex);
     updateCounter(currentIndex);
+    updateURL(currentIndex);
   };
 
   const goToPrev = () => {
     currentIndex = prevIndex(currentIndex, images.length);
     scrollToIndex(container, currentIndex);
     updateCounter(currentIndex);
+    updateURL(currentIndex);
   };
 
+  // Handle browser back/forward
+  const handlePopState = (e: PopStateEvent) => {
+    if (e.state?.photoIndex !== undefined) {
+      currentIndex = e.state.photoIndex;
+      scrollToIndex(container, currentIndex);
+      updateCounter(currentIndex);
+    } else {
+      // User went back before gallery was opened
+      closeGallery();
+    }
+  };
+
+  window.addEventListener('popstate', handlePopState);
+
   // Setup event listeners
-  closeBtn?.addEventListener('click', closeGallery);
+  const cleanupClose = () => {
+    window.removeEventListener('popstate', handlePopState);
+    // Remove photo param from URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete('photo');
+    window.history.replaceState({}, '', url.toString());
+    closeGallery();
+  };
+
+  closeBtn?.addEventListener('click', cleanupClose);
   nextBtn?.addEventListener('click', goToNext);
   prevBtn?.addEventListener('click', goToPrev);
 
   // Setup keyboard navigation
-  const cleanup = setupKeyboard(goToNext, goToPrev, closeGallery);
-
-  // Cleanup on close
-  const originalClose = closeGallery;
-  const newClose = () => {
-    cleanup();
-    originalClose();
-  };
-
-  closeBtn?.addEventListener('click', newClose);
+  const keyboardCleanup = setupKeyboard(goToNext, goToPrev, cleanupClose);
 
   // Animate in
   fadeIn(overlay);
@@ -179,4 +202,7 @@ export function openGallery(images: Image[], startIndex = 0) {
     const slideWidth = window.innerWidth;
     container.scrollLeft = startIndex * slideWidth;
   }, 0);
+
+  // Set initial URL
+  updateURL(startIndex);
 }

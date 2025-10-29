@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import MasonryGrid from '../components/MasonryGrid.astro';
+
+// Sample portrait images - replace with your actual photos
+const images = [
+  { id: '1', src: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=80', alt: 'Portrait 1' },
+  { id: '2', src: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80', alt: 'Portrait 2' },
+  { id: '3', src: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80', alt: 'Portrait 3' },
+  { id: '4', src: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&q=80', alt: 'Portrait 4' },
+  { id: '5', src: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=800&q=80', alt: 'Portrait 5' },
+  { id: '6', src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80', alt: 'Portrait 6' },
+];
+---
+
+<BaseLayout title="Portraits - André Branco" description="Portrait photography by André Branco">
+  <Header />
+
+  <section class="min-h-screen bg-[#0a0a0a] pt-32 pb-20">
+    <div class="container mx-auto px-3 md:px-4 max-w-[1920px]">
+      <h1 class="text-4xl md:text-5xl font-light text-white text-center mb-8 tracking-wide">
+        Portraits
+      </h1>
+      <p class="text-center text-white/60 mb-16 max-w-2xl mx-auto">
+        Capturing the essence and character of people through thoughtful composition and lighting.
+      </p>
+      <MasonryGrid images={images} />
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { openGallery } from '../scripts/gallery';
+
+  const getImageData = (item: Element) => {
+    const img = item.querySelector('img');
+    return {
+      src: img?.src || '',
+      alt: img?.alt || ''
+    };
+  };
+
+  const bindClicks = (items: Element[], images: { src: string; alt: string }[]) => {
+    items.forEach((item, index) => {
+      item.addEventListener('click', () => {
+        openGallery(images, index);
+      });
+    });
+  };
+
+  const init = () => {
+    const items = Array.from(document.querySelectorAll('.masonry-item'));
+    const images = items.map(getImageData);
+    bindClicks(items, images);
+  };
+
+  init();
+</script>

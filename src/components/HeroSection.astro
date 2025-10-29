@@ -1,0 +1,65 @@
+---
+// Using a beautiful landscape photo from Unsplash as placeholder
+const heroImage = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80";
+---
+
+<section class="relative h-screen w-full overflow-hidden">
+  <!-- Background Image -->
+  <img
+    src={heroImage}
+    alt="Hero background"
+    class="absolute inset-0 w-full h-full object-cover"
+    loading="eager"
+  />
+
+  <!-- Dark Overlay -->
+  <div class="absolute inset-0 bg-black/30"></div>
+
+  <!-- Content -->
+  <div class="relative h-full flex flex-col items-center justify-center text-center px-6">
+    <h1 class="text-6xl md:text-8xl font-light text-white tracking-wider mb-4 animate-fade-in">
+      André Branco
+    </h1>
+    <p class="text-xl md:text-2xl font-light text-white/80 tracking-wide animate-fade-in-delay">
+      Photography
+    </p>
+  </div>
+
+  <!-- Scroll Indicator -->
+  <div class="absolute bottom-12 left-1/2 -translate-x-1/2 animate-bounce">
+    <svg
+      class="w-6 h-6 text-white/60"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M19 14l-7 7m0 0l-7-7m7 7V3"
+      ></path>
+    </svg>
+  </div>
+</section>
+
+<style>
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 1s ease-out;
+  }
+
+  .animate-fade-in-delay {
+    animation: fade-in 1s ease-out 0.2s both;
+  }
+</style>

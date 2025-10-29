@@ -1,0 +1,125 @@
+---
+const navItems = [
+  { label: 'Overview', href: '/' },
+  { label: 'Portraits', href: '/portraits' },
+  { label: 'Bits & Pieces', href: '/bits-and-pieces' },
+  { label: 'Film', href: '/film' },
+  { label: 'Info', href: '/info' },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<!-- Desktop Menu - Hidden on mobile -->
+<nav class="hidden md:block fixed top-6 left-1/2 -translate-x-1/2 z-50">
+  <div class="bg-[#2a2a2a]/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
+    {navItems.map((item) => (
+      <a
+        href={item.href}
+        class={`px-4 py-2 rounded-full transition-all duration-300 text-sm whitespace-nowrap ${
+          currentPath === item.href
+            ? 'bg-[#e8e5a0] text-black font-medium'
+            : 'text-white/80 hover:text-white hover:bg-white/10'
+        }`}
+      >
+        {item.label}
+      </a>
+    ))}
+  </div>
+</nav>
+
+<!-- Mobile Hamburger Button -->
+<button
+  id="hamburger"
+  class="md:hidden fixed top-6 right-6 w-12 h-12 bg-[#2a2a2a]/90 backdrop-blur-sm rounded-full flex items-center justify-center z-50 text-white"
+  aria-label="Open menu"
+>
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+  </svg>
+</button>
+
+<!-- Mobile Sidebar Overlay -->
+<div
+  id="sidebarOverlay"
+  class="fixed inset-0 bg-black/50 z-40 opacity-0 pointer-events-none transition-opacity duration-300"
+></div>
+
+<!-- Mobile Sidebar -->
+<aside
+  id="sidebar"
+  class="fixed top-0 right-0 h-full w-64 bg-[#1a1a1a] z-50 transform translate-x-full transition-transform duration-300 shadow-2xl"
+>
+  <div class="flex flex-col h-full">
+    <!-- Close button -->
+    <div class="flex justify-end p-6">
+      <button
+        id="closeSidebar"
+        class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+        aria-label="Close menu"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Navigation items -->
+    <nav class="flex flex-col gap-2 px-6">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          class={`px-4 py-3 rounded-lg transition-all duration-300 ${
+            currentPath === item.href
+              ? 'bg-[#e8e5a0] text-black font-medium'
+              : 'text-white/80 hover:text-white hover:bg-white/10'
+          }`}
+        >
+          {item.label}
+        </a>
+      ))}
+    </nav>
+  </div>
+</aside>
+
+<script>
+  // Small function: open sidebar
+  const openSidebar = () => {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    if (sidebar && overlay) {
+      sidebar.style.transform = 'translateX(0)';
+      overlay.style.opacity = '1';
+      overlay.style.pointerEvents = 'auto';
+      document.body.style.overflow = 'hidden';
+    }
+  };
+
+  // Small function: close sidebar
+  const closeSidebar = () => {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    if (sidebar && overlay) {
+      sidebar.style.transform = 'translateX(100%)';
+      overlay.style.opacity = '0';
+      overlay.style.pointerEvents = 'none';
+      document.body.style.overflow = '';
+    }
+  };
+
+  // Initialize: bind event listeners
+  const initHeader = () => {
+    const hamburger = document.getElementById('hamburger');
+    const closeBtn = document.getElementById('closeSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    hamburger?.addEventListener('click', openSidebar);
+    closeBtn?.addEventListener('click', closeSidebar);
+    overlay?.addEventListener('click', closeSidebar);
+  };
+
+  // Run on load
+  initHeader();
+</script>

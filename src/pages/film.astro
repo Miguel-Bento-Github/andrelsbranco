@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import MasonryGrid from '../components/MasonryGrid.astro';
+
+// Sample film photography images - replace with your actual photos
+const images = [
+  { id: '1', src: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80', alt: 'Film photo 1' },
+  { id: '2', src: 'https://images.unsplash.com/photo-1452421822248-d4c2b47f0c81?w=800&q=80', alt: 'Film photo 2' },
+  { id: '3', src: 'https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=800&q=80', alt: 'Film photo 3' },
+  { id: '4', src: 'https://images.unsplash.com/photo-1500042600524-37ecb686c775?w=800&q=80', alt: 'Film photo 4' },
+  { id: '5', src: 'https://images.unsplash.com/photo-1496293455970-f8581aae0e3b?w=800&q=80', alt: 'Film photo 5' },
+  { id: '6', src: 'https://images.unsplash.com/photo-1513569771920-c9e1d31714af?w=800&q=80', alt: 'Film photo 6' },
+];
+---
+
+<BaseLayout title="Film - André Branco" description="Analog film photography by André Branco">
+  <Header />
+
+  <section class="min-h-screen bg-[#0a0a0a] pt-32 pb-20">
+    <div class="container mx-auto px-3 md:px-4 max-w-[1920px]">
+      <h1 class="text-4xl md:text-5xl font-light text-white text-center mb-8 tracking-wide">
+        Film
+      </h1>
+      <p class="text-center text-white/60 mb-16 max-w-2xl mx-auto">
+        The timeless beauty and organic texture of analog photography.
+      </p>
+      <MasonryGrid images={images} />
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { openGallery } from '../scripts/gallery';
+
+  const getImageData = (item: Element) => {
+    const img = item.querySelector('img');
+    return {
+      src: img?.src || '',
+      alt: img?.alt || ''
+    };
+  };
+
+  const bindClicks = (items: Element[], images: { src: string; alt: string }[]) => {
+    items.forEach((item, index) => {
+      item.addEventListener('click', () => {
+        openGallery(images, index);
+      });
+    });
+  };
+
+  const init = () => {
+    const items = Array.from(document.querySelectorAll('.masonry-item'));
+    const images = items.map(getImageData);
+    bindClicks(items, images);
+  };
+
+  init();
+</script>

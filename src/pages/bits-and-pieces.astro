@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import MasonryGrid from '../components/MasonryGrid.astro';
+
+// Sample images for bits and pieces - replace with your actual photos
+const images = [
+  { id: '1', src: 'https://images.unsplash.com/photo-1495954380655-c0c4ff5a5e7c?w=800&q=80', alt: 'Detail 1' },
+  { id: '2', src: 'https://images.unsplash.com/photo-1481966115753-963394378f23?w=800&q=80', alt: 'Detail 2' },
+  { id: '3', src: 'https://images.unsplash.com/photo-1470058869958-2a77ade41c02?w=800&q=80', alt: 'Detail 3' },
+  { id: '4', src: 'https://images.unsplash.com/photo-1502139214982-d0ad755818d8?w=800&q=80', alt: 'Detail 4' },
+  { id: '5', src: 'https://images.unsplash.com/photo-1476362555312-ab9e108a0b7e?w=800&q=80', alt: 'Detail 5' },
+  { id: '6', src: 'https://images.unsplash.com/photo-1494783367193-149034c05e8f?w=800&q=80', alt: 'Detail 6' },
+];
+---
+
+<BaseLayout title="Bits & Pieces - André Branco" description="Detailed photography and moments captured by André Branco">
+  <Header />
+
+  <section class="min-h-screen bg-[#0a0a0a] pt-32 pb-20">
+    <div class="container mx-auto px-3 md:px-4 max-w-[1920px]">
+      <h1 class="text-4xl md:text-5xl font-light text-white text-center mb-8 tracking-wide">
+        Bits & Pieces
+      </h1>
+      <p class="text-center text-white/60 mb-16 max-w-2xl mx-auto">
+        Small details and unexpected moments that tell bigger stories.
+      </p>
+      <MasonryGrid images={images} />
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { openGallery } from '../scripts/gallery';
+
+  const getImageData = (item: Element) => {
+    const img = item.querySelector('img');
+    return {
+      src: img?.src || '',
+      alt: img?.alt || ''
+    };
+  };
+
+  const bindClicks = (items: Element[], images: { src: string; alt: string }[]) => {
+    items.forEach((item, index) => {
+      item.addEventListener('click', () => {
+        openGallery(images, index);
+      });
+    });
+  };
+
+  const init = () => {
+    const items = Array.from(document.querySelectorAll('.masonry-item'));
+    const images = items.map(getImageData);
+    bindClicks(items, images);
+  };
+
+  init();
+</script>

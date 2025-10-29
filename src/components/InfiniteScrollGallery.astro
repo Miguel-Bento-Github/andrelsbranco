@@ -1,0 +1,95 @@
+---
+interface Props {
+  images: Array<{
+    id: string;
+    src: string;
+    alt: string;
+  }>;
+}
+
+const { images } = Astro.props;
+---
+
+<div class="infinite-scroll-gallery">
+  {images.map((img, index) => (
+    <div
+      class="gallery-item opacity-0 cursor-pointer"
+      data-id={img.id}
+      data-index={index}
+    >
+      <img
+        src={img.src}
+        alt={img.alt}
+        class="w-full h-auto object-cover"
+        loading="lazy"
+      />
+    </div>
+  ))}
+</div>
+
+<style>
+  .infinite-scroll-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .gallery-item {
+    position: relative;
+    width: 100%;
+    transition: opacity 0.3s ease;
+  }
+
+  .gallery-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Fade in when visible */
+  .gallery-item.visible {
+    opacity: 1;
+  }
+</style>
+
+<script>
+  import { animate } from 'animejs';
+
+  // Small function: animate item fade in
+  const fadeInItem = (item: Element) => {
+    animate(item, {
+      opacity: [0, 1],
+      translateY: [20, 0],
+      duration: 600,
+      ease: 'out(2)'
+    });
+  };
+
+  // Small function: setup intersection observer
+  const observeItems = () => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            fadeInItem(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '50px'
+      }
+    );
+
+    const items = document.querySelectorAll('.gallery-item');
+    items.forEach((item) => observer.observe(item));
+  };
+
+  // Initialize
+  observeItems();
+</script>

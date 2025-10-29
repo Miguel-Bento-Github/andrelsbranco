@@ -1,0 +1,64 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+---
+
+<BaseLayout title="About - André Branco" description="Learn more about André Branco, photographer and visual storyteller">
+  <Header />
+
+  <section class="min-h-screen bg-[#0a0a0a] pt-32 pb-20">
+    <div class="max-w-6xl mx-auto px-6">
+      <!-- Page title -->
+      <h1 class="text-5xl md:text-6xl font-light text-white text-center mb-16 tracking-wide">
+        About Me
+      </h1>
+
+      <!-- Two-column layout -->
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <!-- Image column -->
+        <div class="order-2 md:order-1">
+          <img
+            src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80"
+            alt="André Branco"
+            class="w-full rounded-lg shadow-2xl"
+          />
+        </div>
+
+        <!-- Text column -->
+        <div class="order-1 md:order-2 space-y-6">
+          <p class="text-lg text-white/80 leading-relaxed">
+            Hi, I'm André Branco, a photographer based in Portugal with a passion for capturing
+            the beauty of natural landscapes and the essence of everyday moments.
+          </p>
+
+          <p class="text-lg text-white/80 leading-relaxed">
+            My journey in photography began over a decade ago, and since then I've been dedicated
+            to exploring the interplay of light, composition, and emotion in my work.
+          </p>
+
+          <p class="text-lg text-white/80 leading-relaxed">
+            I specialize in landscape and travel photography, always seeking to tell stories
+            through my images that resonate with viewers and transport them to the places
+            I've been fortunate to experience.
+          </p>
+
+          <p class="text-lg text-white/80 leading-relaxed">
+            When I'm not behind the camera, you'll find me hiking in the mountains,
+            planning my next adventure, or sharing my knowledge through workshops and
+            photography mentoring.
+          </p>
+
+          <!-- Contact CTA -->
+          <div class="pt-6">
+            <a
+              href="/contact"
+              class="inline-block px-8 py-3 bg-[#e8e5a0] text-black font-medium rounded-full hover:bg-[#f0edba] transition-colors duration-300"
+            >
+              Get in Touch
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+
 interface Props {
   images: Array<{
     id: string;
@@ -15,11 +17,13 @@ const { images } = Astro.props;
 <div class="masonry-grid">
   {images.map((img) => (
     <div class="masonry-item opacity-0 cursor-pointer relative" data-id={img.id}>
-      <img
+      <Image
         src={img.src}
         alt={img.alt}
         width={img.width || 800}
         height={img.height || 1000}
+        format="webp"
+        quality={100}
         class="masonry-image w-full h-auto object-cover rounded-lg block bg-gray-200 dark:bg-gray-800"
         loading="lazy"
       />

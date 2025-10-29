@@ -26,3 +26,7 @@ docs
 .idea/
 # vscode setting folder
 .vscode/
+# Local Netlify folder
+.netlify
+# Claude settings folder
+.claude/

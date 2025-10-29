@@ -14,7 +14,7 @@ const { images } = Astro.props;
 
 <div class="masonry-grid">
   {images.map((img) => (
-    <div class="masonry-item cursor-pointer relative" data-id={img.id}>
+    <div class="masonry-item opacity-0 cursor-pointer relative" data-id={img.id}>
       <img
         src={img.src}
         alt={img.alt}
@@ -26,6 +26,46 @@ const { images } = Astro.props;
     </div>
   ))}
 </div>
+
+<script>
+  import { animate } from 'animejs';
+
+  const animateItems = (items: Element[]) => {
+    const viewportHeight = window.innerHeight;
+    let visibleIndex = 0;
+
+    items.forEach((item) => {
+      const rect = item.getBoundingClientRect();
+      const isInViewport = rect.top < viewportHeight;
+
+      if (isInViewport) {
+        animate(item, {
+          opacity: [0, 1],
+          translateY: [30, 0],
+          duration: 600,
+          delay: visibleIndex * 40,
+          ease: 'out(4)'
+        });
+        visibleIndex++;
+      } else {
+        // Items not in viewport just appear without animation
+        animate(item, {
+          opacity: [0, 1],
+          duration: 0
+        });
+      }
+    });
+  };
+
+  const init = () => {
+    const items = Array.from(document.querySelectorAll('.masonry-item'));
+    if (items.length > 0) {
+      animateItems(items);
+    }
+  };
+
+  init();
+</script>
 
 <style>
   .masonry-grid {

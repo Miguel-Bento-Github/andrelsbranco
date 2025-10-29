@@ -11,27 +11,57 @@ const currentPath = Astro.url.pathname;
 ---
 
 <!-- Desktop Menu - Hidden on mobile -->
-<nav class="hidden md:block fixed top-6 left-1/2 -translate-x-1/2 z-50">
-  <div class="bg-[#2a2a2a]/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
-    {navItems.map((item) => (
-      <a
-        href={item.href}
-        class={`px-4 py-2 rounded-full transition-all duration-300 text-sm whitespace-nowrap ${
-          currentPath === item.href
-            ? 'bg-[#e8e5a0] text-black font-medium'
-            : 'text-white/80 hover:text-white hover:bg-white/10'
-        }`}
+<nav class="hidden md:block fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+  <div id="desktopNav" class="bg-black/30 backdrop-blur-sm rounded-full px-2 py-2 flex items-center gap-2">
+    <!-- Toggle Button with Icons -->
+    <button
+      id="navToggle"
+      class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all flex-shrink-0"
+      aria-label="Toggle menu"
+    >
+      <svg id="minusIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+      </svg>
+      <svg id="burgerIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+
+    <div id="navContent" class="flex items-center gap-2" style="display: none;">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          class={`nav-link px-4 py-2 rounded-full transition-all duration-300 text-sm whitespace-nowrap font-medium ${
+            currentPath === item.href
+              ? 'bg-[#e8e5a0] text-black'
+              : 'text-white hover:text-white hover:bg-white/10'
+          }`}
+        >
+          {item.label}
+        </a>
+      ))}
+
+      <!-- Theme Toggle -->
+      <button
+        id="themeToggle"
+        class="ml-2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+        aria-label="Toggle theme"
       >
-        {item.label}
-      </a>
-    ))}
+        <svg id="sunIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <svg id="moonIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+        </svg>
+      </button>
+    </div>
   </div>
 </nav>
 
 <!-- Mobile Hamburger Button -->
 <button
   id="hamburger"
-  class="md:hidden fixed top-6 right-6 w-12 h-12 bg-[#2a2a2a]/90 backdrop-blur-sm rounded-full flex items-center justify-center z-50 text-white"
+  class="md:hidden fixed bottom-6 right-6 w-12 h-12 bg-[#2a2a2a]/90 light:bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center z-50 text-white light:text-gray-800"
   aria-label="Open menu"
 >
   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,13 +72,13 @@ const currentPath = Astro.url.pathname;
 <!-- Mobile Sidebar Overlay -->
 <div
   id="sidebarOverlay"
-  class="fixed inset-0 bg-black/50 z-40 opacity-0 pointer-events-none transition-opacity duration-300"
+  class="fixed inset-0 bg-black/50 z-[60] opacity-0 pointer-events-none transition-opacity duration-300"
 ></div>
 
 <!-- Mobile Sidebar -->
 <aside
   id="sidebar"
-  class="fixed top-0 right-0 h-full w-64 bg-[#1a1a1a] z-50 transform translate-x-full transition-transform duration-300 shadow-2xl"
+  class="fixed top-0 right-0 h-full w-64 bg-[#1a1a1a] z-[70] translate-x-full transition-transform duration-300 shadow-2xl"
 >
   <div class="flex flex-col h-full">
     <!-- Close button -->
@@ -78,20 +108,131 @@ const currentPath = Astro.url.pathname;
           {item.label}
         </a>
       ))}
+
+      <!-- Mobile Theme Toggle -->
+      <button
+        id="mobileThemeToggle"
+        class="mt-4 px-4 py-3 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center gap-3 text-white transition-all"
+        aria-label="Toggle theme"
+      >
+        <svg id="mobileSunIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <svg id="mobileMoonIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+        </svg>
+        <span id="themeLabel">Light Mode</span>
+      </button>
     </nav>
   </div>
 </aside>
 
 <script>
+  import { animate } from 'animejs';
+
+  // Small function: toggle desktop nav
+  let isNavExpanded = false;
+  let isAnimating = false;
+  let savedWidth = 0;
+
+  const toggleDesktopNav = () => {
+    if (isAnimating) return;
+
+    const navContent = document.getElementById('navContent');
+    const minusIcon = document.getElementById('minusIcon');
+    const burgerIcon = document.getElementById('burgerIcon');
+
+    if (!navContent || !minusIcon || !burgerIcon) return;
+
+    isAnimating = true;
+
+    if (isNavExpanded) {
+      // Collapse - save the width for later
+      savedWidth = navContent.offsetWidth;
+
+      animate(minusIcon, {
+        opacity: [1, 0],
+        duration: 150,
+        ease: 'out(2)'
+      }).then(() => {
+        minusIcon.classList.add('hidden');
+        burgerIcon.classList.remove('hidden');
+
+        animate(burgerIcon, {
+          opacity: [0, 1],
+          duration: 150,
+          ease: 'out(2)'
+        });
+      });
+
+      animate(navContent, {
+        opacity: [1, 0],
+        width: [savedWidth, 0],
+        marginLeft: [8, 0],
+        duration: 300,
+        ease: 'out(3)'
+      }).then(() => {
+        navContent.style.display = 'none';
+        navContent.style.width = '';
+        navContent.style.opacity = '';
+        navContent.style.marginLeft = '';
+        isAnimating = false;
+      });
+    } else {
+      // Expand - use saved width for smooth reverse animation
+      animate(burgerIcon, {
+        opacity: [1, 0],
+        duration: 150,
+        ease: 'out(2)'
+      }).then(() => {
+        burgerIcon.classList.add('hidden');
+        minusIcon.classList.remove('hidden');
+
+        animate(minusIcon, {
+          opacity: [0, 1],
+          duration: 150,
+          ease: 'out(2)'
+        });
+      });
+
+      navContent.style.display = 'flex';
+      navContent.style.width = '0px';
+      navContent.style.opacity = '0';
+      navContent.style.marginLeft = '0px';
+
+      // Get natural width if not saved yet
+      if (savedWidth === 0) {
+        const tempWidth = navContent.scrollWidth;
+        savedWidth = tempWidth;
+      }
+
+      animate(navContent, {
+        opacity: [0, 1],
+        width: [0, savedWidth],
+        marginLeft: [0, 8],
+        duration: 300,
+        ease: 'out(3)'
+      }).then(() => {
+        navContent.style.width = '';
+        navContent.style.opacity = '';
+        navContent.style.marginLeft = '';
+        isAnimating = false;
+      });
+    }
+
+    isNavExpanded = !isNavExpanded;
+  };
+
   // Small function: open sidebar
   const openSidebar = () => {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
 
     if (sidebar && overlay) {
-      sidebar.style.transform = 'translateX(0)';
-      overlay.style.opacity = '1';
-      overlay.style.pointerEvents = 'auto';
+      sidebar.classList.remove('translate-x-full');
+      sidebar.classList.add('translate-x-0');
+      overlay.classList.remove('opacity-0', 'pointer-events-none');
+      overlay.classList.add('opacity-100', 'pointer-events-auto');
       document.body.style.overflow = 'hidden';
     }
   };
@@ -102,11 +243,54 @@ const currentPath = Astro.url.pathname;
     const overlay = document.getElementById('sidebarOverlay');
 
     if (sidebar && overlay) {
-      sidebar.style.transform = 'translateX(100%)';
-      overlay.style.opacity = '0';
-      overlay.style.pointerEvents = 'none';
+      sidebar.classList.remove('translate-x-0');
+      sidebar.classList.add('translate-x-full');
+      overlay.classList.remove('opacity-100', 'pointer-events-auto');
+      overlay.classList.add('opacity-0', 'pointer-events-none');
       document.body.style.overflow = '';
     }
+  };
+
+  // Small function: update theme icons
+  const updateThemeIcons = (isDark: boolean) => {
+    const sunIcon = document.getElementById('sunIcon');
+    const moonIcon = document.getElementById('moonIcon');
+    const mobileSunIcon = document.getElementById('mobileSunIcon');
+    const mobileMoonIcon = document.getElementById('mobileMoonIcon');
+    const themeLabel = document.getElementById('themeLabel');
+
+    if (isDark) {
+      sunIcon?.classList.remove('hidden');
+      moonIcon?.classList.add('hidden');
+      mobileSunIcon?.classList.remove('hidden');
+      mobileMoonIcon?.classList.add('hidden');
+      if (themeLabel) themeLabel.textContent = 'Light Mode';
+    } else {
+      sunIcon?.classList.add('hidden');
+      moonIcon?.classList.remove('hidden');
+      mobileSunIcon?.classList.add('hidden');
+      mobileMoonIcon?.classList.remove('hidden');
+      if (themeLabel) themeLabel.textContent = 'Dark Mode';
+    }
+  };
+
+  // Small function: toggle theme
+  const toggleTheme = () => {
+    const isDark = document.documentElement.classList.toggle('light');
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    updateThemeIcons(!isDark);
+  };
+
+  // Small function: init theme
+  const initTheme = () => {
+    const savedTheme = localStorage.getItem('theme');
+    const isDark = savedTheme !== 'light';
+
+    if (savedTheme === 'light') {
+      document.documentElement.classList.add('light');
+    }
+
+    updateThemeIcons(isDark);
   };
 
   // Initialize: bind event listeners
@@ -114,12 +298,27 @@ const currentPath = Astro.url.pathname;
     const hamburger = document.getElementById('hamburger');
     const closeBtn = document.getElementById('closeSidebar');
     const overlay = document.getElementById('sidebarOverlay');
+    const themeToggle = document.getElementById('themeToggle');
+    const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+    const navToggle = document.getElementById('navToggle');
 
     hamburger?.addEventListener('click', openSidebar);
     closeBtn?.addEventListener('click', closeSidebar);
     overlay?.addEventListener('click', closeSidebar);
+    themeToggle?.addEventListener('click', toggleTheme);
+    mobileThemeToggle?.addEventListener('click', toggleTheme);
+    navToggle?.addEventListener('click', toggleDesktopNav);
+
+    initTheme();
   };
 
   // Run on load
   initHeader();
 </script>
+
+<style>
+  #navContent {
+    overflow: hidden;
+  }
+</style>
+

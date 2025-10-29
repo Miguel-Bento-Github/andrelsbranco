@@ -18,6 +18,32 @@ const { title, description = "André Branco Photography Portfolio" } = Astro.pro
 </head>
 <body>
   <slot />
+
+  <!-- Signature - Hidden on mobile, shown on desktop in top-right -->
+  <div class="hidden md:block fixed top-8 right-8 z-40 signature">
+    André Branco
+  </div>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&display=swap');
+
+    .signature {
+      font-family: 'Montserrat', 'Avenir', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 1rem;
+      color: white;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      mix-blend-mode: difference;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    }
+
+    .signature:hover {
+      opacity: 1;
+    }
+  </style>
 </body>
 </html>
 

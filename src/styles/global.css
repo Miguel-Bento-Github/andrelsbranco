@@ -10,8 +10,62 @@
   }
 
   body {
-    @apply bg-[#0a0a0a] text-white;
+    @apply bg-[#0a0a0a] text-white transition-colors duration-300;
   }
+
+  /* Light theme */
+  html.light body {
+    @apply bg-[#f5f5f5] text-[#1a1a1a];
+  }
+
+  html.light section {
+    @apply bg-[#f5f5f5] text-[#1a1a1a];
+  }
+
+  html.light h1,
+  html.light h2,
+  html.light h3,
+  html.light p {
+    @apply text-[#1a1a1a];
+  }
+
+  html.light .masonry-item {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+
+  /* Light theme gallery */
+  html.light #gallery-overlay {
+    @apply bg-white/95;
+  }
+
+  html.light #gallery-overlay button {
+    @apply bg-gray-200 text-gray-800;
+  }
+
+  html.light #gallery-overlay button:hover {
+    @apply bg-gray-300;
+  }
+
+  html.light #gallery-counter {
+    @apply text-gray-800;
+  }
+
+  /* Light theme forms */
+  html.light input,
+  html.light textarea {
+    @apply bg-white border-gray-300 text-gray-900;
+  }
+
+  html.light input:focus,
+  html.light textarea:focus {
+    @apply border-gray-500;
+  }
+
+  html.light label {
+    @apply text-gray-700;
+  }
+
 }
 
 /* Custom scrollbar styles */

@@ -70,11 +70,35 @@ const fadeOut = (el: HTMLElement, callback: () => void) => {
 // Small helper: scroll to index
 const scrollToIndex = (container: HTMLElement, index: number) => {
   const slideWidth = window.innerWidth;
-  animate(container, {
-    scrollLeft: index * slideWidth,
-    duration: 400,
-    ease: 'out(2)'
-  });
+  const slides = Array.from(container.querySelectorAll('.gallery-slide'));
+  const targetSlide = slides[index] as HTMLElement;
+
+  if (!targetSlide) return;
+
+  const currentScrollIndex = Math.round(container.scrollLeft / slideWidth);
+  const currentSlide = slides[currentScrollIndex] as HTMLElement;
+  const currentImg = currentSlide?.querySelector('img') as HTMLElement;
+  const targetImg = targetSlide.querySelector('img') as HTMLElement;
+
+  // Scroll to new position instantly
+  container.scrollLeft = index * slideWidth;
+
+  // Crossfade: fade out current, fade in new (simultaneously)
+  if (currentImg && currentImg !== targetImg) {
+    animate(currentImg, {
+      opacity: [1, 0],
+      duration: 250,
+      ease: 'out(2)'
+    });
+  }
+
+  if (targetImg) {
+    animate(targetImg, {
+      opacity: [0, 1],
+      duration: 250,
+      ease: 'out(2)'
+    });
+  }
 };
 
 // Small helper: update counter

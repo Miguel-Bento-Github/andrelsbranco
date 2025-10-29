@@ -66,6 +66,11 @@
     @apply text-gray-700;
   }
 
+  /* Light theme sidebar */
+  html.light #sidebar {
+    @apply bg-white text-[#1a1a1a];
+  }
+
 }
 
 /* Custom scrollbar styles */

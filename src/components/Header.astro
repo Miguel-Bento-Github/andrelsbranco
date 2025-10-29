@@ -19,15 +19,15 @@ const currentPath = Astro.url.pathname;
       class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all flex-shrink-0"
       aria-label="Toggle menu"
     >
-      <svg id="minusIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg id="minusIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
       </svg>
-      <svg id="burgerIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg id="burgerIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
       </svg>
     </button>
 
-    <div id="navContent" class="flex items-center gap-2" style="display: none;">
+    <div id="navContent" class="flex items-center gap-2">
       {navItems.map((item) => (
         <a
           href={item.href}
@@ -78,14 +78,14 @@ const currentPath = Astro.url.pathname;
 <!-- Mobile Sidebar -->
 <aside
   id="sidebar"
-  class="fixed top-0 right-0 h-full w-64 bg-[#1a1a1a] z-[70] translate-x-full transition-transform duration-300 shadow-2xl"
+  class="fixed top-0 right-0 h-full w-64 bg-[#0a0a0a] z-[70] translate-x-full transition-transform duration-300 shadow-2xl"
 >
   <div class="flex flex-col h-full">
     <!-- Close button -->
     <div class="flex justify-end p-6">
       <button
         id="closeSidebar"
-        class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+        class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
         aria-label="Close menu"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,7 +102,7 @@ const currentPath = Astro.url.pathname;
           class={`px-4 py-3 rounded-lg transition-all duration-300 ${
             currentPath === item.href
               ? 'bg-[#e8e5a0] text-black font-medium'
-              : 'text-white/80 hover:text-white hover:bg-white/10'
+              : 'hover:bg-white/10'
           }`}
         >
           {item.label}
@@ -112,7 +112,7 @@ const currentPath = Astro.url.pathname;
       <!-- Mobile Theme Toggle -->
       <button
         id="mobileThemeToggle"
-        class="mt-4 px-4 py-3 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center gap-3 text-white transition-all"
+        class="mt-4 px-4 py-3 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center gap-3 transition-all"
         aria-label="Toggle theme"
       >
         <svg id="mobileSunIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,7 +131,7 @@ const currentPath = Astro.url.pathname;
   import { animate } from 'animejs';
 
   // Small function: toggle desktop nav
-  let isNavExpanded = false;
+  let isNavExpanded = true;
   let isAnimating = false;
   let savedWidth = 0;
 
@@ -284,9 +284,16 @@ const currentPath = Astro.url.pathname;
   // Small function: init theme
   const initTheme = () => {
     const savedTheme = localStorage.getItem('theme');
-    const isDark = savedTheme !== 'light';
 
-    if (savedTheme === 'light') {
+    // Use saved theme if available, otherwise use system preference
+    let isDark: boolean;
+    if (savedTheme) {
+      isDark = savedTheme === 'dark';
+    } else {
+      isDark = !window.matchMedia('(prefers-color-scheme: light)').matches;
+    }
+
+    if (!isDark) {
       document.documentElement.classList.add('light');
     }
 

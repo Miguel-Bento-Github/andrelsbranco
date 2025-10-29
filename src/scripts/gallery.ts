@@ -174,8 +174,9 @@ export function openGallery(images: Image[], startIndex = 0) {
   // Animate in
   fadeIn(overlay);
 
-  // Scroll to start position
+  // Scroll to start position instantly
   setTimeout(() => {
-    scrollToIndex(container, startIndex);
-  }, 100);
+    const slideWidth = window.innerWidth;
+    container.scrollLeft = startIndex * slideWidth;
+  }, 0);
 }

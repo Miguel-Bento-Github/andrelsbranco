@@ -12,11 +12,12 @@ const { images } = Astro.props;
 
 <div class="masonry-grid">
   {images.map((img) => (
-    <div class="masonry-item opacity-0 cursor-pointer" data-id={img.id}>
+    <div class="masonry-item cursor-pointer relative overflow-hidden" data-id={img.id}>
+      <div class="skeleton-loader absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-lg"></div>
       <img
         src={img.src}
         alt={img.alt}
-        class="w-full h-full object-cover rounded-lg"
+        class="masonry-image w-full h-full object-cover rounded-lg relative opacity-0 transition-opacity duration-300"
         loading="lazy"
       />
     </div>
@@ -69,7 +70,7 @@ const { images } = Astro.props;
     width: 100%;
     height: auto;
     display: block;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, opacity 0.3s ease;
   }
 
   .masonry-item:hover img {
@@ -80,24 +81,36 @@ const { images } = Astro.props;
 <script>
   import { animate } from 'animejs';
 
-  // Small function: animate items with quick fade
-  const animateItems = (items: Element[]) => {
-    animate(items, {
-      opacity: [0, 1],
-      duration: 300,
-      ease: 'out(2)'
+  // Show image when loaded
+  const init = () => {
+    const items = Array.from(document.querySelectorAll('.masonry-item'));
+
+    items.forEach(item => {
+      const img = item.querySelector('.masonry-image') as HTMLImageElement;
+      const skeleton = item.querySelector('.skeleton-loader');
+
+      if (!img || !skeleton) return;
+
+      const showImage = () => {
+        animate(img, {
+          opacity: [0, 1],
+          duration: 300,
+          ease: 'out(2)',
+          onComplete: () => {
+            skeleton.remove();
+          }
+        });
+      };
+
+      if (img.complete) {
+        showImage();
+      } else {
+        img.addEventListener('load', showImage);
+        img.addEventListener('error', showImage);
+      }
     });
   };
 
-  // Initialize: animate immediately on load
-  const init = () => {
-    const items = Array.from(document.querySelectorAll('.masonry-item'));
-    if (items.length > 0) {
-      // Quick fade all at once
-      animateItems(items);
-    }
-  };
-
-  // Run on load
   init();
 </script>
+

@@ -17,20 +17,23 @@ const { title, description = "André Branco Photography Portfolio", hideSignatur
   <title>{title}</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <script is:inline>
-    // Prevent flash by setting theme before render
+    // Set theme based on system preference and listen for changes
     (function() {
-      const savedTheme = localStorage.getItem('theme');
-      let isDark;
+      const applyTheme = () => {
+        const isDark = !window.matchMedia('(prefers-color-scheme: light)').matches;
+        if (isDark) {
+          document.documentElement.classList.remove('light');
+        } else {
+          document.documentElement.classList.add('light');
+        }
+      };
 
-      if (savedTheme) {
-        isDark = savedTheme === 'dark';
-      } else {
-        isDark = !window.matchMedia('(prefers-color-scheme: light)').matches;
-      }
+      // Apply theme immediately
+      applyTheme();
 
-      if (!isDark) {
-        document.documentElement.classList.add('light');
-      }
+      // Listen for system preference changes
+      const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      darkModeQuery.addEventListener('change', applyTheme);
     })();
   </script>
 </head>

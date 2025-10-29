@@ -4,7 +4,8 @@ export const prerender = false;
 
 export const GET: APIRoute = async () => {
   const clientId = import.meta.env.GITHUB_CLIENT_ID;
-  const redirectUri = `${import.meta.env.SITE}/api/auth/callback`;
+  const site = import.meta.env.SITE?.replace(/\/$/, '') || 'http://localhost:4321';
+  const redirectUri = `${site}/api/auth/callback`;
 
   const githubAuthUrl =
     `https://github.com/login/oauth/authorize?` +

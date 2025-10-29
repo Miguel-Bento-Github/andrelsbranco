@@ -392,13 +392,9 @@ const film = isAuthenticated ? await getCollection('film') : [];
     const deleteBtn = document.getElementById('deleteSelectedBtn');
     const checkboxes = document.querySelectorAll('.item-checkbox');
 
-    console.log('Delete button:', deleteBtn);
-    console.log('Found checkboxes:', checkboxes.length);
-
     // Show/hide delete button based on selection
     function updateDeleteButton() {
       const selected = Array.from(checkboxes).filter((cb: any) => cb.checked);
-      console.log('Selected items:', selected.length);
       if (selected.length > 0) {
         deleteBtn?.classList.remove('hidden');
         if (deleteBtn) deleteBtn.disabled = false;
@@ -420,8 +416,6 @@ const film = isAuthenticated ? await getCollection('film') : [];
         return;
       }
 
-      console.log('Starting delete of', selected.length, 'items');
-
       try {
         if (deleteBtn) {
           deleteBtn.disabled = true;
@@ -435,8 +429,6 @@ const film = isAuthenticated ? await getCollection('film') : [];
           const id = cb.dataset.id;
           const category = cb.dataset.category;
           const filePath = cb.dataset.file;
-
-          console.log('Deleting:', { id, category, filePath });
 
           const response = await fetch('/api/admin/delete', {
             method: 'POST',
@@ -455,7 +447,6 @@ const film = isAuthenticated ? await getCollection('film') : [];
           }
         }
 
-        console.log('All items deleted, reloading...');
         // Refresh page
         window.location.reload();
       } catch (err) {

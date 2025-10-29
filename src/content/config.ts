@@ -42,8 +42,14 @@ const film = defineCollection({
   schema: videoSchema
 });
 
+const overview = defineCollection({
+  type: 'content',
+  schema: photoSchema
+});
+
 export const collections = {
   'portraits': portraits,
   'bits-pieces': bitsPieces,
-  'film': film
+  'film': film,
+  'overview': overview
 };

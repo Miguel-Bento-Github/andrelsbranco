@@ -2,9 +2,10 @@
 interface Props {
   title: string;
   description?: string;
+  hideSignature?: boolean;
 }
 
-const { title, description = "André Branco Photography Portfolio" } = Astro.props;
+const { title, description = "André Branco Photography Portfolio", hideSignature = false } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -20,9 +21,11 @@ const { title, description = "André Branco Photography Portfolio" } = Astro.pro
   <slot />
 
   <!-- Signature - Hidden on mobile, shown on desktop in top-right -->
-  <div class="hidden md:block fixed top-8 right-8 z-40 signature">
-    André Branco
-  </div>
+  {!hideSignature && (
+    <div class="hidden md:block fixed top-8 right-8 z-40 signature">
+      André Branco
+    </div>
+  )}
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&display=swap');

@@ -3,145 +3,91 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 ---
 
-<BaseLayout title="Info - André Branco" description="About André Branco and contact information">
+<BaseLayout title="Info - André Branco" description="About André Branco and contact information" hideSignature={true}>
   <Header />
 
-  <!-- About Section -->
-  <section class="pt-8 pb-20">
-    <div class="max-w-6xl mx-auto px-6">
-      <h1 class="text-5xl md:text-6xl font-light text-center mb-16 tracking-wide">
-        About
+  <!-- Main Content - Centered in viewport -->
+  <section class="h-[calc(100vh-6rem)] flex items-center justify-center px-6">
+    <div class="max-w-5xl w-full">
+      <!-- Title -->
+      <h1 class="text-4xl md:text-5xl font-light text-center mb-8 tracking-wide">
+        André Branco
       </h1>
 
-      <div class="grid md:grid-cols-2 gap-12 items-center">
-        <div class="order-2 md:order-1">
-          <img
-            src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80"
-            alt="André Branco"
-            class="w-full rounded-lg shadow-2xl"
-          />
-        </div>
-
-        <div class="order-1 md:order-2 space-y-6">
-          <p class="text-lg leading-relaxed">
-            Hi, I'm André Branco, a photographer based in Portugal with a passion for capturing
-            the beauty of natural landscapes and the essence of everyday moments.
-          </p>
-
-          <p class="text-lg leading-relaxed">
-            My journey in photography began over a decade ago, and since then I've been dedicated
-            to exploring the interplay of light, composition, and emotion in my work.
-          </p>
-
-          <p class="text-lg leading-relaxed">
-            I specialize in landscape and travel photography, always seeking to tell stories
-            through my images that resonate with viewers and transport them to the places
-            I've been fortunate to experience.
-          </p>
-
-          <p class="text-lg leading-relaxed">
-            When I'm not behind the camera, you'll find me hiking in the mountains,
-            planning my next adventure, or sharing my knowledge through workshops and
-            photography mentoring.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Contact Section -->
-  <section class="py-20 border-t border-white/10">
-    <div class="max-w-2xl mx-auto px-6">
-      <h2 class="text-4xl md:text-5xl font-light  text-center mb-8 tracking-wide">
-        Get in Touch
-      </h2>
-
-      <p class="text-center  mb-16 text-lg">
-        Have a project in mind or want to purchase prints? I'd love to hear from you.
+      <!-- About Text -->
+      <p class="text-center text-base md:text-lg leading-relaxed mb-12 max-w-3xl mx-auto opacity-80">
+        Photographer based in Portugal with a passion for capturing the beauty of natural landscapes
+        and the essence of everyday moments. Specializing in landscape and travel photography,
+        always seeking to tell stories through images.
       </p>
 
-      <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST" class="space-y-6">
-        <div>
-          <label for="name" class="block  mb-2 font-light">Name</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            required
-            class="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg  placeholder-white/40 focus:outline-none focus:border-white transition-colors duration-300"
-            placeholder="Your name"
-          />
-        </div>
-
-        <div>
-          <label for="email" class="block  mb-2 font-light">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            required
-            class="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg  placeholder-white/40 focus:outline-none focus:border-white transition-colors duration-300"
-            placeholder="your@email.com"
-          />
-        </div>
-
-        <div>
-          <label for="message" class="block  mb-2 font-light">Message</label>
-          <textarea
-            id="message"
-            name="message"
-            required
-            rows="6"
-            class="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg  placeholder-white/40 focus:outline-none focus:border-white transition-colors duration-300 resize-none"
-            placeholder="Tell me about your project or inquiry..."
-          ></textarea>
-        </div>
-
-        <button
-          type="submit"
-          class="w-full px-8 py-4 bg-[#e8e5a0] text-black font-medium rounded-lg hover:bg-[#f0edba] transition-colors duration-300"
-        >
-          Send Message
-        </button>
-      </form>
-
-      <!-- Social Links -->
-      <div class="mt-16 pt-16 border-t border-white/10">
-        <p class="text-center  mb-6">Or connect with me on social media</p>
-        <div class="flex justify-center gap-6">
+      <!-- Contact Card -->
+      <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-white/10 max-w-3xl mx-auto">
+        <div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 mb-8">
+          <!-- Email -->
           <a
-            href="https://instagram.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center  hover:text-white transition-all duration-300"
-            aria-label="Instagram"
+            href="mailto:andrelsbranco@gmail.com"
+            class="flex items-center gap-3 group transition-all duration-300 whitespace-nowrap"
           >
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-            </svg>
-          </a>
-
-          <a
-            href="https://twitter.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center  hover:text-white transition-all duration-300"
-            aria-label="Twitter"
-          >
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-            </svg>
-          </a>
-
-          <a
-            href="mailto:hello@andrebranco.com"
-            class="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center  hover:text-white transition-all duration-300"
-            aria-label="Email"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 opacity-60 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
+            <span class="text-sm md:text-base font-light group-hover:opacity-70 transition-opacity">andrelsbranco@gmail.com</span>
           </a>
+
+          <!-- Website -->
+          <a
+            href="https://andrebranco.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-3 group transition-all duration-300 whitespace-nowrap"
+          >
+            <svg class="w-5 h-5 opacity-60 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+            </svg>
+            <span class="text-sm md:text-base font-light group-hover:opacity-70 transition-opacity">www.andrebranco.com</span>
+          </a>
+        </div>
+
+        <!-- Social Links -->
+        <div class="pt-8 border-t border-white/10">
+          <div class="flex justify-center gap-6">
+            <a
+              href="https://www.instagram.com/andrethetraveler/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="opacity-60 hover:opacity-100 transition-opacity duration-300"
+              aria-label="Instagram"
+            >
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+            </a>
+
+            <a
+              href="https://twitter.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="opacity-60 hover:opacity-100 transition-opacity duration-300"
+              aria-label="Twitter"
+            >
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+              </svg>
+            </a>
+
+            <a
+              href="https://behance.net"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="opacity-60 hover:opacity-100 transition-opacity duration-300"
+              aria-label="Behance"
+            >
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M22 7h-7v-2h7v2zm1.726 10c-.442 1.297-2.029 3-5.101 3-3.074 0-5.564-1.729-5.564-5.675 0-3.91 2.325-5.92 5.466-5.92 3.082 0 4.964 1.782 5.375 4.426.078.506.109 1.188.095 2.14h-8.027c.13 3.211 3.483 3.312 4.588 2.029h3.168zm-7.686-4h4.965c-.105-1.547-1.136-2.219-2.477-2.219-1.466 0-2.277.768-2.488 2.219zm-9.574 6.988h-6.466v-14.967h6.953c5.476.081 5.58 5.444 2.72 6.906 3.461 1.26 3.577 8.061-3.207 8.061zm-3.466-8.988h3.584c2.508 0 2.906-3-.312-3h-3.272v3zm3.391 3h-3.391v3.016h3.341c3.055 0 2.868-3.016.05-3.016z"/>
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
     </div>

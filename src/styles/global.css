@@ -3,6 +3,7 @@
 @layer base {
   * {
     @apply antialiased;
+    font-family: 'Montserrat', 'Avenir', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   html {

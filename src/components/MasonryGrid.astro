@@ -12,12 +12,11 @@ const { images } = Astro.props;
 
 <div class="masonry-grid">
   {images.map((img) => (
-    <div class="masonry-item cursor-pointer relative overflow-hidden" data-id={img.id}>
-      <div class="skeleton-loader absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-lg"></div>
+    <div class="masonry-item cursor-pointer relative" data-id={img.id}>
       <img
         src={img.src}
         alt={img.alt}
-        class="masonry-image w-full h-full object-cover rounded-lg relative opacity-0 transition-opacity duration-300"
+        class="masonry-image w-full h-auto object-cover rounded-lg block opacity-0"
         loading="lazy"
       />
     </div>
@@ -56,10 +55,10 @@ const { images } = Astro.props;
     break-inside: avoid;
     margin-bottom: 24px;
     position: relative;
-    overflow: hidden;
     border-radius: 0.5rem;
     transition: transform 0.3s ease;
     cursor: pointer;
+    display: block;
   }
 
   .masonry-item:hover {
@@ -70,7 +69,7 @@ const { images } = Astro.props;
     width: 100%;
     height: auto;
     display: block;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition: transform 0.3s ease;
   }
 
   .masonry-item:hover img {
@@ -87,18 +86,14 @@ const { images } = Astro.props;
 
     items.forEach(item => {
       const img = item.querySelector('.masonry-image') as HTMLImageElement;
-      const skeleton = item.querySelector('.skeleton-loader');
 
-      if (!img || !skeleton) return;
+      if (!img) return;
 
       const showImage = () => {
         animate(img, {
           opacity: [0, 1],
-          duration: 300,
-          ease: 'out(2)',
-          onComplete: () => {
-            skeleton.remove();
-          }
+          duration: 600,
+          ease: 'out(3)'
         });
       };
 

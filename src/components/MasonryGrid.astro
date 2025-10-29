@@ -4,6 +4,8 @@ interface Props {
     id: string;
     src: string;
     alt: string;
+    width?: number;
+    height?: number;
   }>;
 }
 
@@ -16,7 +18,9 @@ const { images } = Astro.props;
       <img
         src={img.src}
         alt={img.alt}
-        class="masonry-image w-full h-auto object-cover rounded-lg block opacity-0"
+        width={img.width || 800}
+        height={img.height || 1000}
+        class="masonry-image w-full h-auto object-cover rounded-lg block bg-gray-200 dark:bg-gray-800"
         loading="lazy"
       />
     </div>
@@ -55,14 +59,10 @@ const { images } = Astro.props;
     break-inside: avoid;
     margin-bottom: 24px;
     position: relative;
+    overflow: hidden;
     border-radius: 0.5rem;
-    transition: transform 0.3s ease;
     cursor: pointer;
     display: block;
-  }
-
-  .masonry-item:hover {
-    transform: scale(1.02);
   }
 
   .masonry-item img {
@@ -77,35 +77,4 @@ const { images } = Astro.props;
   }
 </style>
 
-<script>
-  import { animate } from 'animejs';
-
-  // Show image when loaded
-  const init = () => {
-    const items = Array.from(document.querySelectorAll('.masonry-item'));
-
-    items.forEach(item => {
-      const img = item.querySelector('.masonry-image') as HTMLImageElement;
-
-      if (!img) return;
-
-      const showImage = () => {
-        animate(img, {
-          opacity: [0, 1],
-          duration: 600,
-          ease: 'out(3)'
-        });
-      };
-
-      if (img.complete) {
-        showImage();
-      } else {
-        img.addEventListener('load', showImage);
-        img.addEventListener('error', showImage);
-      }
-    });
-  };
-
-  init();
-</script>
 

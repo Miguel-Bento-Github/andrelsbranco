@@ -36,7 +36,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return new Response('No files provided', { status: 400 });
     }
 
-    // Process files sequentially with delay to avoid Astro data-store race condition
+    // Process files sequentially with minimal delay to avoid Astro data-store race condition
     const results = [];
 
     for (let i = 0; i < files.length; i++) {
@@ -44,9 +44,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         const result = await processFile(files[i], category, featured);
         results.push(result);
 
-        // Add delay between files to let Astro's watcher process each one
+        // Minimal delay to let Astro's watcher catch up (reduced from 500ms to 200ms)
         if (i < files.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       } catch (error) {
         console.error(`Error processing ${files[i].name}:`, error);

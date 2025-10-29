@@ -5,8 +5,60 @@ import { existsSync } from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import sharp from 'sharp';
+import { Octokit } from '@octokit/rest';
 
 ffmpeg.setFfmpegPath(ffmpegPath.path);
+
+const isDev = import.meta.env.DEV;
+const octokit = new Octokit({
+  auth: import.meta.env.GITHUB_TOKEN
+});
+
+// Helper to commit file to GitHub
+async function commitToGitHub(filePath: string, content: Buffer, message: string) {
+  if (isDev) return; // Skip in development
+
+  const owner = import.meta.env.GITHUB_OWNER;
+  const repo = import.meta.env.GITHUB_REPO;
+  const branch = import.meta.env.GITHUB_BRANCH || 'main';
+
+  if (!owner || !repo || !import.meta.env.GITHUB_TOKEN) {
+    console.warn('GitHub credentials not configured, skipping commit');
+    return;
+  }
+
+  try {
+    // Get current file SHA if it exists
+    let sha: string | undefined;
+    try {
+      const { data } = await octokit.repos.getContent({
+        owner,
+        repo,
+        path: filePath,
+        ref: branch
+      });
+      if ('sha' in data) {
+        sha = data.sha;
+      }
+    } catch (error) {
+      // File doesn't exist yet, that's ok
+    }
+
+    // Create or update file
+    await octokit.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path: filePath,
+      message,
+      content: content.toString('base64'),
+      branch,
+      ...(sha && { sha })
+    });
+  } catch (error) {
+    console.error(`Failed to commit ${filePath}:`, error);
+    throw error;
+  }
+}
 
 export const prerender = false;
 
@@ -58,9 +110,25 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       }
     }
 
+    // Trigger Netlify rebuild if webhook is configured (only in production)
+    if (!isDev) {
+      const buildHook = import.meta.env.NETLIFY_BUILD_HOOK;
+      if (buildHook) {
+        try {
+          await fetch(buildHook, { method: 'POST' });
+        } catch (error) {
+          console.error('Failed to trigger rebuild:', error);
+          // Don't fail the upload if rebuild trigger fails
+        }
+      }
+    }
+
     return new Response(JSON.stringify({
       success: true,
-      results
+      results,
+      message: !isDev && import.meta.env.NETLIFY_BUILD_HOOK
+        ? 'Upload complete. Site will rebuild in 2-3 minutes.'
+        : 'Upload complete.'
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
@@ -159,7 +227,21 @@ order: 0
 ---`;
 
       const mdFilename = `${timestamp}-${safeName.replace(/\.[^/.]+$/, '')}.md`;
-      await writeFile(path.join(contentDir, mdFilename), markdown);
+
+      // Write locally (for dev) or commit to GitHub (for prod)
+      if (isDev) {
+        await writeFile(path.join(contentDir, mdFilename), markdown);
+      } else {
+        // Commit to GitHub in production
+        const fullImageBuffer = await sharp(imageBuffer).webp({ quality: 95 }).toBuffer();
+        const thumbImageBuffer = await sharp(imageBuffer).resize(800, null, { withoutEnlargement: true }).webp({ quality: 85 }).toBuffer();
+
+        await Promise.all([
+          commitToGitHub(`public/uploads/photos/${webpFilename}`, fullImageBuffer, `Add ${webpFilename}`),
+          commitToGitHub(`public/uploads/photos/${thumbFilename}`, thumbImageBuffer, `Add thumbnail ${thumbFilename}`),
+          commitToGitHub(`src/content/${category}/${mdFilename}`, Buffer.from(markdown), `Add ${file.name}`)
+        ]);
+      }
 
       return {
         success: true,
@@ -210,7 +292,21 @@ order: 0
 ---`;
 
     const mdFilename = `${timestamp}-${safeName.replace(/\.[^/.]+$/, '')}.md`;
-    await writeFile(path.join(contentDir, mdFilename), markdown);
+
+    // Write locally (for dev) or commit to GitHub (for prod)
+    if (isDev) {
+      await writeFile(path.join(contentDir, mdFilename), markdown);
+    } else {
+      // Commit to GitHub in production
+      const videoBuffer = Buffer.from(buffer);
+      const thumbnailBuffer = await sharp(path.join(process.cwd(), `public/uploads/photos/${thumbnailFilename}`)).toBuffer();
+
+      await Promise.all([
+        commitToGitHub(`public/uploads/videos/${filename}`, videoBuffer, `Add video ${filename}`),
+        commitToGitHub(`public/uploads/photos/${thumbnailFilename}`, thumbnailBuffer, `Add thumbnail ${thumbnailFilename}`),
+        commitToGitHub(`src/content/${category}/${mdFilename}`, Buffer.from(markdown), `Add ${file.name}`)
+      ]);
+    }
 
     return {
       success: true,

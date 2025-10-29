@@ -165,6 +165,7 @@ const film = isAuthenticated ? await getCollection('film') : [];
                       data-id={item.id}
                       data-category="overview"
                       data-file={item.data.image}
+                      data-thumbnail={item.data.thumbnail}
                     />
                     <img src={item.data.thumbnail || item.data.image} alt={item.data.title} class="w-full h-full object-cover" />
                   </div>
@@ -186,6 +187,7 @@ const film = isAuthenticated ? await getCollection('film') : [];
                       data-id={item.id}
                       data-category="portraits"
                       data-file={item.data.image}
+                      data-thumbnail={item.data.thumbnail}
                     />
                     <img src={item.data.image} alt={item.data.title} class="w-full h-full object-cover" />
                     {item.data.featured && (
@@ -210,6 +212,7 @@ const film = isAuthenticated ? await getCollection('film') : [];
                       data-id={item.id}
                       data-category="bits-pieces"
                       data-file={item.data.image}
+                      data-thumbnail={item.data.thumbnail}
                     />
                     <img src={item.data.image} alt={item.data.title} class="w-full h-full object-cover" />
                     {item.data.featured && (
@@ -233,7 +236,8 @@ const film = isAuthenticated ? await getCollection('film') : [];
                       class="item-checkbox absolute top-2 left-2 w-5 h-5 rounded cursor-pointer z-10"
                       data-id={item.id}
                       data-category="film"
-                      data-file={item.data.thumbnail}
+                      data-file={item.data.video}
+                      data-thumbnail={item.data.thumbnail}
                     />
                     <img src={item.data.thumbnail} alt={item.data.title} class="w-full h-full object-cover" />
                     {item.data.featured && (
@@ -450,11 +454,12 @@ const film = isAuthenticated ? await getCollection('film') : [];
           const id = cb.dataset.id;
           const category = cb.dataset.category;
           const filePath = cb.dataset.file;
+          const thumbnailPath = cb.dataset.thumbnail;
 
           const response = await fetch('/api/admin/delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, category, filePath })
+            body: JSON.stringify({ id, category, filePath, thumbnailPath })
           });
 
           if (!response.ok) {

@@ -6,12 +6,29 @@ interface Image {
   alt: string;
 }
 
+// Small helper: check if source is video
+const isVideo = (src: string): boolean => {
+  const videoExtensions = ['.mp4', '.mov', '.webm', '.avi', '.mkv'];
+  return videoExtensions.some(ext => src.toLowerCase().endsWith(ext));
+};
+
 // Small helper: create slide HTML
-const createSlide = (img: Image, index: number): string => `
+const createSlide = (img: Image, index: number): string => {
+  const isVideoFile = isVideo(img.src);
+
+  return `
   <div class="gallery-slide snap-start flex-shrink-0 w-screen h-screen flex items-center justify-center px-4 py-4" data-index="${index}">
-    <img src="${img.src}" alt="${img.alt}" class="w-full h-full object-contain" />
+    ${isVideoFile
+      ? `<video controls class="w-full h-full object-contain" playsinline preload="metadata">
+           <source src="${img.src}" type="video/mp4">
+           <source src="${img.src}" type="video/quicktime">
+           Your browser does not support the video tag.
+         </video>`
+      : `<img src="${img.src}" alt="${img.alt}" class="w-full h-full object-contain" />`
+    }
   </div>
-`;
+  `;
+};
 
 // Small helper: create overlay HTML
 const createOverlayHTML = (images: Image[], startIndex: number): string => `
@@ -77,23 +94,23 @@ const scrollToIndex = (container: HTMLElement, index: number) => {
 
   const currentScrollIndex = Math.round(container.scrollLeft / slideWidth);
   const currentSlide = slides[currentScrollIndex] as HTMLElement;
-  const currentImg = currentSlide?.querySelector('img') as HTMLElement;
-  const targetImg = targetSlide.querySelector('img') as HTMLElement;
+  const currentMedia = currentSlide?.querySelector('img, video') as HTMLElement;
+  const targetMedia = targetSlide.querySelector('img, video') as HTMLElement;
 
   // Scroll to new position instantly
   container.scrollLeft = index * slideWidth;
 
   // Crossfade: fade out current, fade in new (simultaneously)
-  if (currentImg && currentImg !== targetImg) {
-    animate(currentImg, {
+  if (currentMedia && currentMedia !== targetMedia) {
+    animate(currentMedia, {
       opacity: [1, 0],
       duration: 250,
       ease: 'out(2)'
     });
   }
 
-  if (targetImg) {
-    animate(targetImg, {
+  if (targetMedia) {
+    animate(targetMedia, {
       opacity: [0, 1],
       duration: 250,
       ease: 'out(2)'

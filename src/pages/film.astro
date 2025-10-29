@@ -1,17 +1,32 @@
 ---
+export const prerender = true;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import MasonryGrid from '../components/MasonryGrid.astro';
 
-// Sample film photography images - replace with your actual photos
-const images = [
-  { id: '1', src: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80', alt: 'Film photo 1', width: 800, height: 1000 },
-  { id: '2', src: 'https://images.unsplash.com/photo-1452421822248-d4c2b47f0c81?w=800&q=80', alt: 'Film photo 2', width: 800, height: 1000 },
-  { id: '3', src: 'https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=800&q=80', alt: 'Film photo 3', width: 800, height: 1000 },
-  { id: '4', src: 'https://images.unsplash.com/photo-1500042600524-37ecb686c775?w=800&q=80', alt: 'Film photo 4', width: 800, height: 1000 },
-  { id: '5', src: 'https://images.unsplash.com/photo-1496293455970-f8581aae0e3b?w=800&q=80', alt: 'Film photo 5', width: 800, height: 1000 },
-  { id: '6', src: 'https://images.unsplash.com/photo-1513569771920-c9e1d31714af?w=800&q=80', alt: 'Film photo 6', width: 800, height: 1000 },
-];
+// Fetch film content from content collection (videos with thumbnails)
+import { getCollection } from 'astro:content';
+
+const allFilm = await getCollection('film');
+
+// Sort by order (if specified) then by date
+const sortedFilm = allFilm.sort((a, b) => {
+  if (a.data.order !== b.data.order) {
+    return a.data.order - b.data.order;
+  }
+  return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
+});
+
+// Map to image format expected by MasonryGrid (using thumbnails for videos)
+const images = sortedFilm.map((item) => ({
+  id: item.id,
+  src: item.data.thumbnail,
+  videoSrc: item.data.video,
+  alt: item.data.title,
+  width: item.data.thumbnailWidth,
+  height: item.data.thumbnailHeight
+}));
 ---
 
 <BaseLayout title="Film - André Branco" description="Analog film photography by André Branco">
@@ -35,8 +50,9 @@ const images = [
 
   const getImageData = (item: Element) => {
     const img = item.querySelector('img');
+    const videoSrc = item.getAttribute('data-video-src');
     return {
-      src: img?.src || '',
+      src: videoSrc || img?.src || '',
       alt: img?.alt || ''
     };
   };

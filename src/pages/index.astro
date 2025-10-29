@@ -1,10 +1,51 @@
 ---
+export const prerender = true;
+
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import MasonryGrid from '../components/MasonryGrid.astro';
 
-// Sample images with different aspect ratios for masonry effect (52 total)
-const images = [
+// Fetch featured content from all collections
+const portraits = await getCollection('portraits', ({ data }) => data.featured);
+const bitsPieces = await getCollection('bits-pieces', ({ data }) => data.featured);
+const film = await getCollection('film', ({ data }) => data.featured);
+
+// Combine all featured items
+const allFeatured = [
+  ...portraits.map(item => ({
+    id: item.id,
+    src: item.data.image,
+    alt: item.data.title,
+    width: item.data.width,
+    height: item.data.height,
+    date: item.data.date
+  })),
+  ...bitsPieces.map(item => ({
+    id: item.id,
+    src: item.data.image,
+    alt: item.data.title,
+    width: item.data.width,
+    height: item.data.height,
+    date: item.data.date
+  })),
+  ...film.map(item => ({
+    id: item.id,
+    src: item.data.thumbnail,
+    alt: item.data.title,
+    width: item.data.thumbnailWidth,
+    height: item.data.thumbnailHeight,
+    date: item.data.date
+  }))
+];
+
+// Sort by date (newest first)
+const images = allFeatured.sort((a, b) =>
+  new Date(b.date).getTime() - new Date(a.date).getTime()
+);
+
+// Fallback to sample images if no content uploaded yet
+const sampleImages = [
   { id: '1', src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=1200&fit=crop', alt: 'Mountain landscape', width: 800, height: 1200 },
   { id: '2', src: 'https://images.unsplash.com/photo-1682687221038-404cb8830901?w=800&h=600&fit=crop', alt: 'Coastal view', width: 800, height: 600 },
   { id: '3', src: 'https://images.unsplash.com/photo-1682687220923-c58b9a4592ae?w=800&h=1000&fit=crop', alt: 'Forest path', width: 800, height: 1000 },
@@ -58,6 +99,9 @@ const images = [
   { id: '51', src: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&h=1100&fit=crop', alt: 'Jungle path', width: 800, height: 1100 },
   { id: '52', src: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&h=850&fit=crop', alt: 'Evening sky', width: 800, height: 850 },
 ];
+
+// Use uploaded content if available, otherwise show sample images
+const displayImages = images.length > 0 ? images : sampleImages;
 ---
 
 <BaseLayout title="André Branco - Photography">
@@ -66,7 +110,7 @@ const images = [
   <!-- Gallery Section - starts right away -->
   <section class="min-h-screen pt-8 pb-20">
     <div class="container mx-auto px-3 md:px-4 max-w-[1920px]">
-      <MasonryGrid images={images} />
+      <MasonryGrid images={displayImages} />
     </div>
   </section>
 </BaseLayout>

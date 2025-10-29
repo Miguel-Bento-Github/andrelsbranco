@@ -5,6 +5,7 @@ interface Props {
   images: Array<{
     id: string;
     src: string;
+    videoSrc?: string;
     alt: string;
     width?: number;
     height?: number;
@@ -16,7 +17,11 @@ const { images } = Astro.props;
 
 <div class="masonry-grid">
   {images.map((img) => (
-    <div class="masonry-item opacity-0 cursor-pointer relative" data-id={img.id}>
+    <div
+      class="masonry-item opacity-0 cursor-pointer relative"
+      data-id={img.id}
+      data-video-src={img.videoSrc}
+    >
       <Image
         src={img.src}
         alt={img.alt}

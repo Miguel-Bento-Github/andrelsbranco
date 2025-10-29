@@ -1,17 +1,31 @@
 ---
+export const prerender = true;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import MasonryGrid from '../components/MasonryGrid.astro';
 
-// Sample images for bits and pieces - replace with your actual photos
-const images = [
-  { id: '1', src: 'https://images.unsplash.com/photo-1495954380655-c0c4ff5a5e7c?w=800&q=80', alt: 'Detail 1', width: 800, height: 1000 },
-  { id: '2', src: 'https://images.unsplash.com/photo-1481966115753-963394378f23?w=800&q=80', alt: 'Detail 2', width: 800, height: 1000 },
-  { id: '3', src: 'https://images.unsplash.com/photo-1470058869958-2a77ade41c02?w=800&q=80', alt: 'Detail 3', width: 800, height: 1000 },
-  { id: '4', src: 'https://images.unsplash.com/photo-1502139214982-d0ad755818d8?w=800&q=80', alt: 'Detail 4', width: 800, height: 1000 },
-  { id: '5', src: 'https://images.unsplash.com/photo-1476362555312-ab9e108a0b7e?w=800&q=80', alt: 'Detail 5', width: 800, height: 1000 },
-  { id: '6', src: 'https://images.unsplash.com/photo-1494783367193-149034c05e8f?w=800&q=80', alt: 'Detail 6', width: 800, height: 1000 },
-];
+// Fetch bits & pieces from content collection
+import { getCollection } from 'astro:content';
+
+const allBitsPieces = await getCollection('bits-pieces');
+
+// Sort by order (if specified) then by date
+const sortedBitsPieces = allBitsPieces.sort((a, b) => {
+  if (a.data.order !== b.data.order) {
+    return a.data.order - b.data.order;
+  }
+  return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
+});
+
+// Map to image format expected by MasonryGrid
+const images = sortedBitsPieces.map((item) => ({
+  id: item.id,
+  src: item.data.image,
+  alt: item.data.title,
+  width: item.data.width,
+  height: item.data.height
+}));
 ---
 
 <BaseLayout title="Bits & Pieces - André Branco" description="Detailed photography and moments captured by André Branco">

@@ -30,3 +30,10 @@ docs
 .netlify
 # Claude settings folder
 .claude/
+
+# Uploaded content and media
+src/content/*/
+!src/content/*/.gitkeep
+!src/content/config.ts
+public/uploads/
+!public/uploads/**/.gitkeep

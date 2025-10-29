@@ -1,0 +1,437 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const isDev = import.meta.env.DEV;
+
+// Check for dev bypass
+const devBypass = Astro.url.searchParams.get('dev') === 'true';
+if (isDev && devBypass) {
+  Astro.cookies.set('github_session', JSON.stringify({
+    authenticated: true,
+    username: 'dev-user'
+  }), {
+    path: '/',
+    maxAge: 60 * 60 * 24,
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax'
+  });
+  return Astro.redirect('/admin');
+}
+
+const session = Astro.cookies.get('github_session')?.value;
+let isAuthenticated = false;
+let username = '';
+
+if (session) {
+  try {
+    const data = JSON.parse(session);
+    isAuthenticated = data.authenticated;
+    username = data.username;
+  } catch {}
+}
+
+// Fetch all uploaded content
+const portraits = isAuthenticated ? await getCollection('portraits') : [];
+const bitsPieces = isAuthenticated ? await getCollection('bits-pieces') : [];
+const film = isAuthenticated ? await getCollection('film') : [];
+---
+
+<BaseLayout title="Admin - André Branco" description="Content management">
+  <div class="min-h-screen">
+    {!isAuthenticated ? (
+      <!-- Login Screen -->
+      <div class="flex items-center justify-center min-h-screen px-6">
+        <div class="w-full max-w-md">
+          <h1 class="text-4xl font-light text-center mb-12 tracking-wide">Admin</h1>
+
+          {isDev ? (
+            <a
+              href="/admin?dev=true"
+              class="flex items-center justify-center w-full bg-[#e8e5a0] text-black px-6 py-4 rounded-full font-medium hover:bg-[#f0edba] transition-colors duration-300 mb-4"
+            >
+              Continue (Dev Mode)
+            </a>
+          ) : (
+            <a
+              href="/api/auth/login"
+              class="flex items-center justify-center w-full bg-[#e8e5a0] text-black px-6 py-4 rounded-full font-medium hover:bg-[#f0edba] transition-colors duration-300"
+            >
+              <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+              Login with GitHub
+            </a>
+          )}
+        </div>
+      </div>
+    ) : (
+      <!-- Upload Dashboard -->
+      <div class="container mx-auto px-6 py-12 max-w-4xl min-h-screen">
+        <div class="flex justify-between items-center mb-12">
+          <h1 class="text-4xl font-light tracking-wide">Upload Content</h1>
+          <div class="flex items-center gap-6">
+            <span class="text-white/60">@{username}</span>
+            <a href="/api/auth/logout" class="text-white/60 hover:text-white transition-colors">Logout</a>
+          </div>
+        </div>
+
+        <form id="uploadForm" class="space-y-8">
+
+          <div>
+            <label class="block mb-3 font-light">Category</label>
+            <select id="category" class="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:outline-none focus:border-[#e8e5a0] transition-colors duration-300">
+              <option value="portraits">Portraits</option>
+              <option value="bits-pieces">Bits & Pieces</option>
+              <option value="film">Film</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block mb-3 font-light">
+              Files
+              <span class="text-white/40 text-sm ml-2">(drag & drop or click)</span>
+            </label>
+            <div
+              id="dropzone"
+              class="border-2 border-dashed border-white/20 rounded-lg p-16 text-center cursor-pointer hover:border-[#e8e5a0] transition-colors duration-300"
+            >
+              <svg class="mx-auto h-12 w-12 text-white/40 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <p class="text-lg mb-2">Drop files here or click</p>
+              <p class="text-sm text-white/40">JPG, PNG, MP4, MOV</p>
+            </div>
+            <input type="file" id="fileInput" multiple accept="image/*,video/*" class="hidden" />
+          </div>
+
+          <div id="fileList" class="space-y-2"></div>
+
+          <div class="flex items-center">
+            <input type="checkbox" id="featured" class="w-4 h-4 rounded border-white/20 bg-white/5" checked />
+            <label for="featured" class="ml-3 text-sm font-light">Featured (show on Overview page)</label>
+          </div>
+
+          <button
+            type="submit"
+            id="uploadBtn"
+            class="w-full bg-[#e8e5a0] text-black px-6 py-4 rounded-full font-medium hover:bg-[#f0edba] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
+          >
+            Upload Files
+          </button>
+
+          <div id="progress" class="hidden">
+            <div class="bg-white/10 rounded-full h-2 overflow-hidden">
+              <div id="progressBar" class="bg-[#e8e5a0] h-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <p id="progressText" class="text-sm text-center mt-3 text-white/60"></p>
+          </div>
+
+          <div id="success" class="hidden bg-[#e8e5a0]/20 border border-[#e8e5a0] px-4 py-3 rounded-lg">
+            <span class="text-[#e8e5a0]">✓ Upload complete! Site will rebuild in 2-3 minutes.</span>
+          </div>
+
+          <div id="error" class="hidden bg-red-500/20 border border-red-500 px-4 py-3 rounded-lg text-red-400"></div>
+        </form>
+
+        <!-- Uploaded Content Overview -->
+        <div class="mt-16 pt-16 border-t border-white/10">
+          <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl font-light">Uploaded Content</h2>
+            <button
+              id="deleteSelectedBtn"
+              class="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hidden"
+              disabled
+            >
+              Delete Selected
+            </button>
+          </div>
+
+          <!-- Portraits -->
+          {portraits.length > 0 && (
+            <div class="mb-12">
+              <h3 class="text-xl font-light mb-4">Portraits ({portraits.length})</h3>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {portraits.map((item) => (
+                  <div class="relative aspect-square overflow-hidden rounded-lg bg-white/5 group">
+                    <input
+                      type="checkbox"
+                      class="item-checkbox absolute top-2 left-2 w-5 h-5 rounded cursor-pointer z-10"
+                      data-id={item.id}
+                      data-category="portraits"
+                      data-file={item.data.image}
+                    />
+                    <img src={item.data.image} alt={item.data.title} class="w-full h-full object-cover" />
+                    {item.data.featured && (
+                      <span class="absolute top-2 right-2 bg-[#e8e5a0] text-black text-xs px-2 py-1 rounded">Featured</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- Bits & Pieces -->
+          {bitsPieces.length > 0 && (
+            <div class="mb-12">
+              <h3 class="text-xl font-light mb-4">Bits & Pieces ({bitsPieces.length})</h3>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {bitsPieces.map((item) => (
+                  <div class="relative aspect-square overflow-hidden rounded-lg bg-white/5 group">
+                    <input
+                      type="checkbox"
+                      class="item-checkbox absolute top-2 left-2 w-5 h-5 rounded cursor-pointer z-10"
+                      data-id={item.id}
+                      data-category="bits-pieces"
+                      data-file={item.data.image}
+                    />
+                    <img src={item.data.image} alt={item.data.title} class="w-full h-full object-cover" />
+                    {item.data.featured && (
+                      <span class="absolute top-2 right-2 bg-[#e8e5a0] text-black text-xs px-2 py-1 rounded">Featured</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- Film -->
+          {film.length > 0 && (
+            <div class="mb-12">
+              <h3 class="text-xl font-light mb-4">Film ({film.length})</h3>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {film.map((item) => (
+                  <div class="relative aspect-square overflow-hidden rounded-lg bg-white/5 group">
+                    <input
+                      type="checkbox"
+                      class="item-checkbox absolute top-2 left-2 w-5 h-5 rounded cursor-pointer z-10"
+                      data-id={item.id}
+                      data-category="film"
+                      data-file={item.data.thumbnail}
+                    />
+                    <img src={item.data.thumbnail} alt={item.data.title} class="w-full h-full object-cover" />
+                    {item.data.featured && (
+                      <span class="absolute top-2 right-2 bg-[#e8e5a0] text-black text-xs px-2 py-1 rounded">Featured</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {portraits.length === 0 && bitsPieces.length === 0 && film.length === 0 && (
+            <p class="text-white/40 text-center py-12">No content uploaded yet.</p>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const progress = document.getElementById('progress');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const success = document.getElementById('success');
+    const error = document.getElementById('error');
+
+    let selectedFiles = [];
+
+    if (dropzone) {
+      dropzone.onclick = () => fileInput?.click();
+
+      dropzone.ondragover = (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-white/20');
+        dropzone.classList.add('border-[#e8e5a0]', 'bg-white/5');
+      };
+
+      dropzone.ondragleave = () => {
+        dropzone.classList.add('border-white/20');
+        dropzone.classList.remove('border-[#e8e5a0]', 'bg-white/5');
+      };
+
+      dropzone.ondrop = (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-white/20');
+        dropzone.classList.remove('border-[#e8e5a0]', 'bg-white/5');
+        selectedFiles = [...selectedFiles, ...Array.from(e.dataTransfer.files)];
+        renderFileList();
+      };
+    }
+
+    if (fileInput) {
+      fileInput.onchange = (e) => {
+        selectedFiles = [...selectedFiles, ...Array.from(e.target.files)];
+        renderFileList();
+      };
+    }
+
+    function renderFileList() {
+      if (!fileList) return;
+      fileList.innerHTML = selectedFiles.map((file, i) => `
+        <div class="flex justify-between items-center bg-white/5 border border-white/10 px-4 py-3 rounded-lg">
+          <span class="text-sm">${file.name} <span class="text-white/40">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span></span>
+          <button type="button" onclick="removeFile(${i})" class="text-white/60 hover:text-white transition-colors text-sm">
+            Remove
+          </button>
+        </div>
+      `).join('');
+    }
+
+    window.removeFile = (i) => {
+      selectedFiles.splice(i, 1);
+      renderFileList();
+    };
+
+    if (uploadForm) {
+      uploadForm.onsubmit = async (e) => {
+        e.preventDefault();
+
+        if (selectedFiles.length === 0) {
+          if (error) {
+            error.textContent = 'Please select at least one file';
+            error.classList.remove('hidden');
+          }
+          return;
+        }
+
+        success?.classList.add('hidden');
+        error?.classList.add('hidden');
+        progress?.classList.remove('hidden');
+        if (uploadBtn) uploadBtn.disabled = true;
+
+        const category = (document.getElementById('category') as HTMLSelectElement)?.value;
+        const featured = (document.getElementById('featured') as HTMLInputElement)?.checked;
+
+        try {
+          for (let i = 0; i < selectedFiles.length; i++) {
+            const formData = new FormData();
+            formData.append('file', selectedFiles[i]);
+            formData.append('category', category);
+            formData.append('featured', String(featured));
+
+            if (progressText) {
+              progressText.textContent = `Uploading ${i + 1} of ${selectedFiles.length}...`;
+            }
+            if (progressBar) {
+              progressBar.style.width = `${((i + 1) / selectedFiles.length) * 100}%`;
+            }
+
+            const response = await fetch('/api/admin/upload', {
+              method: 'POST',
+              body: formData
+            });
+
+            if (!response.ok) throw new Error('Upload failed');
+          }
+
+          progress?.classList.add('hidden');
+          success?.classList.remove('hidden');
+          selectedFiles = [];
+          renderFileList();
+          if (fileInput) fileInput.value = '';
+          if (uploadBtn) uploadBtn.disabled = false;
+
+          // Refresh page to show uploaded content
+          setTimeout(() => window.location.reload(), 2000);
+
+        } catch (err) {
+          progress?.classList.add('hidden');
+          if (error) {
+            error.textContent = 'Upload failed: ' + (err as Error).message;
+            error.classList.remove('hidden');
+          }
+          if (uploadBtn) uploadBtn.disabled = false;
+        }
+      };
+    }
+
+    // Handle bulk delete
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+
+    console.log('Delete button:', deleteBtn);
+    console.log('Found checkboxes:', checkboxes.length);
+
+    // Show/hide delete button based on selection
+    function updateDeleteButton() {
+      const selected = Array.from(checkboxes).filter((cb: any) => cb.checked);
+      console.log('Selected items:', selected.length);
+      if (selected.length > 0) {
+        deleteBtn?.classList.remove('hidden');
+        if (deleteBtn) deleteBtn.disabled = false;
+      } else {
+        deleteBtn?.classList.add('hidden');
+        if (deleteBtn) deleteBtn.disabled = true;
+      }
+    }
+
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', updateDeleteButton);
+    });
+
+    deleteBtn?.addEventListener('click', async () => {
+      const selected = Array.from(checkboxes).filter((cb: any) => cb.checked);
+
+      if (selected.length === 0) {
+        alert('No items selected');
+        return;
+      }
+
+      console.log('Starting delete of', selected.length, 'items');
+
+      try {
+        if (deleteBtn) {
+          deleteBtn.disabled = true;
+          deleteBtn.textContent = `Deleting ${selected.length} items...`;
+        }
+
+        let completed = 0;
+        // Delete each selected item
+        for (const checkbox of selected) {
+          const cb = checkbox as HTMLInputElement;
+          const id = cb.dataset.id;
+          const category = cb.dataset.category;
+          const filePath = cb.dataset.file;
+
+          console.log('Deleting:', { id, category, filePath });
+
+          const response = await fetch('/api/admin/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, category, filePath })
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Delete failed');
+          }
+
+          completed++;
+          if (deleteBtn) {
+            deleteBtn.textContent = `Deleted ${completed}/${selected.length}...`;
+          }
+        }
+
+        console.log('All items deleted, reloading...');
+        // Refresh page
+        window.location.reload();
+      } catch (err) {
+        console.error('Delete error:', err);
+        alert('Delete failed: ' + (err as Error).message);
+        if (deleteBtn) {
+          deleteBtn.disabled = false;
+          deleteBtn.textContent = 'Delete Selected';
+        }
+      }
+    });
+  </script>
+</BaseLayout>

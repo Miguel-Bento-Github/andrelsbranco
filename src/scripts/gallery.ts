@@ -119,7 +119,7 @@ const setupKeyboard = (
 ) => {
   const handleKey = (e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose();
-    if (e.key === 'ArrowRight') onNext();
+    if (e.key === 'ArrowRight' || e.key === ' ') onNext();
     if (e.key === 'ArrowLeft') onPrev();
   };
 

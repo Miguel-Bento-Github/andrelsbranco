@@ -16,6 +16,7 @@ const allFeatured = [
   ...portraits.map(item => ({
     id: item.id,
     src: item.data.image,
+    thumbnail: item.data.thumbnail,
     alt: item.data.title,
     width: item.data.width,
     height: item.data.height,
@@ -24,6 +25,7 @@ const allFeatured = [
   ...bitsPieces.map(item => ({
     id: item.id,
     src: item.data.image,
+    thumbnail: item.data.thumbnail,
     alt: item.data.title,
     width: item.data.width,
     height: item.data.height,
@@ -121,8 +123,9 @@ const displayImages = images.length > 0 ? images : sampleImages;
   // Small helper: extract image data from DOM
   const getImageData = (item: Element) => {
     const img = item.querySelector('img');
+    const fullSrc = (item as HTMLElement).dataset.fullSrc;
     return {
-      src: img?.src || '',
+      src: fullSrc || img?.src || '',
       alt: img?.alt || ''
     };
   };

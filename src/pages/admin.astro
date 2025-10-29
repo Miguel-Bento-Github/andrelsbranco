@@ -312,25 +312,36 @@ const film = isAuthenticated ? await getCollection('film') : [];
         const featured = (document.getElementById('featured') as HTMLInputElement)?.checked;
 
         try {
-          for (let i = 0; i < selectedFiles.length; i++) {
-            const formData = new FormData();
-            formData.append('file', selectedFiles[i]);
-            formData.append('category', category);
-            formData.append('featured', String(featured));
+          const formData = new FormData();
+          selectedFiles.forEach(file => {
+            formData.append('files', file);
+          });
+          formData.append('category', category);
+          formData.append('featured', String(featured));
 
-            if (progressText) {
-              progressText.textContent = `Uploading ${i + 1} of ${selectedFiles.length}...`;
-            }
-            if (progressBar) {
-              progressBar.style.width = `${((i + 1) / selectedFiles.length) * 100}%`;
-            }
+          if (progressText) {
+            progressText.textContent = `Processing ${selectedFiles.length} file(s)... This may take a moment.`;
+          }
+          if (progressBar) {
+            progressBar.style.width = '10%';
+          }
 
-            const response = await fetch('/api/admin/upload', {
-              method: 'POST',
-              body: formData
-            });
+          const response = await fetch('/api/admin/upload', {
+            method: 'POST',
+            body: formData
+          });
 
-            if (!response.ok) throw new Error('Upload failed');
+          if (!response.ok) throw new Error('Upload failed');
+
+          const data = await response.json();
+
+          if (progressBar) {
+            progressBar.style.width = '100%';
+          }
+
+          if (progressText && data.results) {
+            const successful = data.results.filter((r: any) => r.success).length;
+            progressText.textContent = `Successfully uploaded ${successful} of ${selectedFiles.length} file(s)`;
           }
 
           progress?.classList.add('hidden');

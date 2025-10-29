@@ -5,6 +5,7 @@ interface Props {
   images: Array<{
     id: string;
     src: string;
+    thumbnail?: string;
     videoSrc?: string;
     alt: string;
     width?: number;
@@ -21,14 +22,11 @@ const { images } = Astro.props;
       class="masonry-item opacity-0 cursor-pointer relative"
       data-id={img.id}
       data-video-src={img.videoSrc}
+      data-full-src={img.src}
     >
-      <Image
-        src={img.src}
+      <img
+        src={img.thumbnail || img.src}
         alt={img.alt}
-        width={img.width || 800}
-        height={img.height || 1000}
-        format="webp"
-        quality={100}
         class="masonry-image w-full h-auto object-cover rounded-lg block bg-gray-200 dark:bg-gray-800"
         loading="lazy"
       />

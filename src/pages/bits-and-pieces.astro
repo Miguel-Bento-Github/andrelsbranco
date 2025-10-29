@@ -22,6 +22,7 @@ const sortedBitsPieces = allBitsPieces.sort((a, b) => {
 const images = sortedBitsPieces.map((item) => ({
   id: item.id,
   src: item.data.image,
+  thumbnail: item.data.thumbnail,
   alt: item.data.title,
   width: item.data.width,
   height: item.data.height
@@ -49,8 +50,9 @@ const images = sortedBitsPieces.map((item) => ({
 
   const getImageData = (item: Element) => {
     const img = item.querySelector('img');
+    const fullSrc = (item as HTMLElement).dataset.fullSrc;
     return {
-      src: img?.src || '',
+      src: fullSrc || img?.src || '',
       alt: img?.alt || ''
     };
   };

@@ -21,6 +21,7 @@ const sortedPortraits = allPortraits.sort((a, b) => {
 const images = sortedPortraits.map((portrait) => ({
   id: portrait.id,
   src: portrait.data.image,
+  thumbnail: portrait.data.thumbnail,
   alt: portrait.data.title,
   width: portrait.data.width,
   height: portrait.data.height
@@ -48,8 +49,9 @@ const images = sortedPortraits.map((portrait) => ({
 
   const getImageData = (item: Element) => {
     const img = item.querySelector('img');
+    const fullSrc = (item as HTMLElement).dataset.fullSrc;
     return {
-      src: img?.src || '',
+      src: fullSrc || img?.src || '',
       alt: img?.alt || ''
     };
   };

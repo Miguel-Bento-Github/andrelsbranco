@@ -5,6 +5,7 @@ const photoSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
   image: z.string(),
+  thumbnail: z.string().optional(),
   width: z.number(),
   height: z.number(),
   featured: z.boolean().default(false),

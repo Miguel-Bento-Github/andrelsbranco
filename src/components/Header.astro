@@ -6,8 +6,6 @@ const navItems = [
   { label: 'Film', href: '/film' },
   { label: 'Info', href: '/info' },
 ];
-
-const currentPath = Astro.url.pathname;
 ---
 
 <!-- Desktop Menu - Hidden on mobile -->
@@ -31,11 +29,7 @@ const currentPath = Astro.url.pathname;
       {navItems.map((item) => (
         <a
           href={item.href}
-          class={`nav-link px-4 py-2 rounded-full transition-all duration-300 text-sm whitespace-nowrap font-medium ${
-            currentPath === item.href
-              ? 'bg-[#e8e5a0] text-black'
-              : 'text-white hover:text-white hover:bg-white/10'
-          }`}
+          class="nav-link px-4 py-2 rounded-full transition-all duration-300 text-sm whitespace-nowrap font-medium text-white"
         >
           {item.label}
         </a>
@@ -112,11 +106,7 @@ const currentPath = Astro.url.pathname;
       {navItems.map((item) => (
         <a
           href={item.href}
-          class={`px-4 py-3 rounded-lg transition-all duration-300 ${
-            currentPath === item.href
-              ? 'bg-[#e8e5a0] text-black font-medium'
-              : 'hover:bg-white/10'
-          }`}
+          class="nav-link px-4 py-3 rounded-lg transition-all duration-300 hover:bg-white/10"
         >
           {item.label}
         </a>
@@ -327,6 +317,41 @@ const currentPath = Astro.url.pathname;
     updateThemeIcons(isDark);
   };
 
+  // Small function: set active nav state
+  const setActiveNav = (skipTransition = false) => {
+    const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    navLinks.forEach((link) => {
+      const href = (link as HTMLAnchorElement).getAttribute('href');
+      const isActive = href === currentPath;
+
+      // Temporarily disable transition for initial load
+      if (skipTransition) {
+        link.classList.add('!transition-none');
+      }
+
+      if (isActive) {
+        link.classList.add('bg-[#e8e5a0]', 'text-black');
+        link.classList.remove('text-white', 'hover:text-white', 'hover:bg-white/10');
+        // For desktop nav, add font-medium if not present
+        if (!link.classList.contains('py-3')) {
+          link.classList.add('font-medium');
+        }
+      } else {
+        link.classList.remove('bg-[#e8e5a0]', 'text-black', 'font-medium');
+        link.classList.add('text-white', 'hover:text-white', 'hover:bg-white/10');
+      }
+
+      // Re-enable transition after a frame
+      if (skipTransition) {
+        requestAnimationFrame(() => {
+          link.classList.remove('!transition-none');
+        });
+      }
+    });
+  };
+
   // Initialize: bind event listeners
   const initHeader = () => {
     const hamburger = document.getElementById('hamburger');
@@ -344,6 +369,7 @@ const currentPath = Astro.url.pathname;
     navToggle?.addEventListener('click', toggleDesktopNav);
 
     initTheme();
+    setActiveNav(true); // Skip transition on initial load
   };
 
   // Run on load

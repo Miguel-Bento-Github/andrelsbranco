@@ -18,6 +18,7 @@ if (allOverview.length > 0) {
   images = sortedOverview.map((item) => ({
     id: item.id,
     src: item.data.display || item.data.image, // Use display version for gallery, fallback to full-size
+    original: item.data.image, // Full-size original
     thumbnail: item.data.thumbnail,
     alt: item.data.title,
     width: item.data.width,
@@ -34,6 +35,7 @@ if (allOverview.length > 0) {
     ...portraits.map(item => ({
       id: item.id,
       src: item.data.display || item.data.image, // Use display version for gallery, fallback to full-size
+      original: item.data.image, // Full-size original
       thumbnail: item.data.thumbnail,
       alt: item.data.title,
       width: item.data.width,
@@ -43,6 +45,7 @@ if (allOverview.length > 0) {
     ...bitsPieces.map(item => ({
       id: item.id,
       src: item.data.display || item.data.image, // Use display version for gallery, fallback to full-size
+      original: item.data.image, // Full-size original
       thumbnail: item.data.thumbnail,
       alt: item.data.title,
       width: item.data.width,
@@ -151,8 +154,10 @@ const displayImages = images.length > 0 ? images : sampleImages;
   const getImageData = (item: Element) => {
     const img = item.querySelector('img');
     const fullSrc = (item as HTMLElement).dataset.fullSrc;
+    const originalSrc = (item as HTMLElement).dataset.originalSrc;
     return {
       src: fullSrc || img?.src || '',
+      original: originalSrc || fullSrc || img?.src || '',
       alt: img?.alt || ''
     };
   };

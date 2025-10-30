@@ -48,8 +48,10 @@ const images = sortedFilm.map((item) => ({
   const getImageData = (item: Element) => {
     const img = item.querySelector('img');
     const videoSrc = item.getAttribute('data-video-src');
+    const originalSrc = (item as HTMLElement).dataset.originalSrc;
     return {
       src: videoSrc || img?.src || '',
+      original: originalSrc || videoSrc || img?.src || '',
       alt: img?.alt || ''
     };
   };

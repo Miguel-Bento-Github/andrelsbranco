@@ -16,6 +16,7 @@ const sortedPortraits = allPortraits.sort((a, b) => a.id.localeCompare(b.id));
 const images = sortedPortraits.map((portrait) => ({
   id: portrait.id,
   src: portrait.data.display || portrait.data.image, // Use display version for gallery, fallback to full-size
+  original: portrait.data.image, // Full-size original
   thumbnail: portrait.data.thumbnail,
   alt: portrait.data.title,
   width: portrait.data.width,
@@ -47,8 +48,10 @@ const images = sortedPortraits.map((portrait) => ({
   const getImageData = (item: Element) => {
     const img = item.querySelector('img');
     const fullSrc = (item as HTMLElement).dataset.fullSrc;
+    const originalSrc = (item as HTMLElement).dataset.originalSrc;
     return {
       src: fullSrc || img?.src || '',
+      original: originalSrc || fullSrc || img?.src || '',
       alt: img?.alt || ''
     };
   };

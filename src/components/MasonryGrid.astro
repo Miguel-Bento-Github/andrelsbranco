@@ -5,6 +5,7 @@ interface Props {
   images: Array<{
     id: string;
     src: string;
+    original?: string;
     thumbnail?: string;
     videoSrc?: string;
     alt: string;
@@ -23,6 +24,7 @@ const { images } = Astro.props;
       data-id={img.id}
       data-video-src={img.videoSrc}
       data-full-src={img.src}
+      data-original-src={img.original || img.src}
     >
       <img
         src={img.thumbnail || img.src}

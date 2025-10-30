@@ -3,6 +3,7 @@ import { animate } from 'animejs';
 // Type definition
 interface Image {
   src: string;
+  original?: string;
   alt: string;
 }
 
@@ -39,6 +40,13 @@ const createOverlayHTML = (totalImages: number, startIndex: number): string => `
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
       </svg>
     </button>
+
+    <!-- View Original button -->
+    <a id="gallery-original" href="#" target="_blank" class="absolute top-6 right-20 z-10 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all" title="View original">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+      </svg>
+    </a>
 
     <!-- Counter -->
     <div id="gallery-counter" class="absolute top-6 left-6 z-10 text-white text-lg font-light">
@@ -196,6 +204,15 @@ const updateCounter = (current: number) => {
   }
 };
 
+// Small helper: update original link
+const updateOriginalLink = (images: Image[], current: number) => {
+  const originalLink = document.getElementById('gallery-original') as HTMLAnchorElement;
+  if (originalLink && images[current]) {
+    const originalSrc = images[current].original || images[current].src;
+    originalLink.href = originalSrc;
+  }
+};
+
 // Small helper: update URL with current index
 const updateURL = (index: number) => {
   const url = new URL(window.location.href);
@@ -274,6 +291,7 @@ export function openGallery(images: Image[], startIndex = 0) {
     currentIndex = nextIndex(currentIndex, images.length);
     scrollToIndex(container, currentIndex, images);
     updateCounter(currentIndex);
+    updateOriginalLink(images, currentIndex);
     updateURL(currentIndex);
 
     // Prefetch next image after this one
@@ -287,6 +305,7 @@ export function openGallery(images: Image[], startIndex = 0) {
     currentIndex = prevIndex(currentIndex, images.length);
     scrollToIndex(container, currentIndex, images);
     updateCounter(currentIndex);
+    updateOriginalLink(images, currentIndex);
     updateURL(currentIndex);
 
     // Prefetch previous image before this one
@@ -302,6 +321,7 @@ export function openGallery(images: Image[], startIndex = 0) {
       currentIndex = e.state.photoIndex;
       scrollToIndex(container, currentIndex, images);
       updateCounter(currentIndex);
+      updateOriginalLink(images, currentIndex);
     } else {
       // User went back before gallery was opened
       closeGallery();
@@ -341,6 +361,7 @@ export function openGallery(images: Image[], startIndex = 0) {
     }
   }, 0);
 
-  // Set initial URL
+  // Set initial URL and original link
   updateURL(startIndex);
+  updateOriginalLink(images, startIndex);
 }

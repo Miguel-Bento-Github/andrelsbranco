@@ -30,8 +30,8 @@ const createSlide = (img: Image, index: number): string => {
   `;
 };
 
-// Small helper: create overlay HTML
-const createOverlayHTML = (images: Image[], startIndex: number): string => `
+// Small helper: create overlay HTML (without slides - they'll be added dynamically)
+const createOverlayHTML = (totalImages: number, startIndex: number): string => `
   <div id="gallery-overlay" class="fixed inset-0 z-[100] bg-black/30 backdrop-blur-xl opacity-0 h-[100dvh] w-full">
     <!-- Close button -->
     <button id="gallery-close" class="absolute top-6 right-6 z-10 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
@@ -42,7 +42,7 @@ const createOverlayHTML = (images: Image[], startIndex: number): string => `
 
     <!-- Counter -->
     <div id="gallery-counter" class="absolute top-6 left-6 z-10 text-white text-lg font-light">
-      <span id="current-index">${startIndex + 1}</span> / ${images.length}
+      <span id="current-index">${startIndex + 1}</span> / ${totalImages}
     </div>
 
     <!-- Navigation arrows -->
@@ -60,7 +60,7 @@ const createOverlayHTML = (images: Image[], startIndex: number): string => `
 
     <!-- Horizontal scroll container -->
     <div id="gallery-container" class="flex overflow-x-auto snap-x snap-mandatory h-full scrollbar-hide">
-      ${images.map((img, i) => createSlide(img, i)).join('')}
+      <!-- Slides will be dynamically added here -->
     </div>
   </div>
 `;
@@ -84,21 +84,91 @@ const fadeOut = (el: HTMLElement, callback: () => void) => {
   });
 };
 
+// Small helper: prefetch image
+const prefetchImage = (src: string) => {
+  if (document.querySelector(`link[rel="prefetch"][href="${src}"]`)) {
+    return;
+  }
+  const link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.as = 'image';
+  link.href = src;
+  document.head.appendChild(link);
+};
+
+// Small helper: ensure slide exists at index
+const ensureSlide = (container: HTMLElement, images: Image[], index: number): HTMLElement => {
+  // Check if slide already exists
+  let slide = container.querySelector(`[data-index="${index}"]`) as HTMLElement;
+  if (slide) return slide;
+
+  // Create new slide
+  const slideHTML = createSlide(images[index], index);
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = slideHTML.trim();
+  slide = tempDiv.firstElementChild as HTMLElement;
+
+  // Find correct position to insert (keep slides in order)
+  const allSlides = Array.from(container.querySelectorAll('.gallery-slide'));
+  const insertBeforeSlide = allSlides.find(s => {
+    const slideIndex = parseInt((s as HTMLElement).dataset.index || '0');
+    return slideIndex > index;
+  });
+
+  if (insertBeforeSlide) {
+    container.insertBefore(slide, insertBeforeSlide);
+  } else {
+    container.appendChild(slide);
+  }
+
+  return slide;
+};
+
+// Small helper: load slides in range around current index
+const loadSlidesInRange = (container: HTMLElement, images: Image[], currentIndex: number, range = 2) => {
+  const totalImages = images.length;
+
+  // Load current + range on each side
+  for (let i = -range; i <= range; i++) {
+    const index = (currentIndex + i + totalImages) % totalImages;
+    ensureSlide(container, images, index);
+  }
+
+  // Remove slides far from current (keep range + 1 buffer)
+  const allSlides = Array.from(container.querySelectorAll('.gallery-slide'));
+  allSlides.forEach(slide => {
+    const slideIndex = parseInt((slide as HTMLElement).dataset.index || '0');
+    const distance = Math.min(
+      Math.abs(slideIndex - currentIndex),
+      Math.abs(slideIndex - currentIndex + totalImages),
+      Math.abs(slideIndex - currentIndex - totalImages)
+    );
+
+    if (distance > range + 1) {
+      slide.remove();
+    }
+  });
+};
+
 // Small helper: scroll to index
-const scrollToIndex = (container: HTMLElement, index: number) => {
+const scrollToIndex = (container: HTMLElement, index: number, images: Image[]) => {
+  // Ensure slides are loaded
+  loadSlidesInRange(container, images, index);
+
   const slideWidth = window.innerWidth;
   const slides = Array.from(container.querySelectorAll('.gallery-slide'));
-  const targetSlide = slides[index] as HTMLElement;
+  const targetSlide = slides.find(s => parseInt((s as HTMLElement).dataset.index || '0') === index) as HTMLElement;
 
   if (!targetSlide) return;
 
   const currentScrollIndex = Math.round(container.scrollLeft / slideWidth);
-  const currentSlide = slides[currentScrollIndex] as HTMLElement;
+  const currentSlide = slides.find(s => parseInt((s as HTMLElement).dataset.index || '0') === currentScrollIndex) as HTMLElement;
   const currentMedia = currentSlide?.querySelector('img, video') as HTMLElement;
   const targetMedia = targetSlide.querySelector('img, video') as HTMLElement;
 
-  // Scroll to new position instantly
-  container.scrollLeft = index * slideWidth;
+  // Calculate scroll position based on DOM order
+  const slideIndexInDOM = slides.indexOf(targetSlide);
+  container.scrollLeft = slideIndexInDOM * slideWidth;
 
   // Crossfade: fade out current, fade in new (simultaneously)
   if (currentMedia && currentMedia !== targetMedia) {
@@ -176,7 +246,7 @@ export function openGallery(images: Image[], startIndex = 0) {
 
   // Create and append overlay
   const div = document.createElement('div');
-  div.innerHTML = createOverlayHTML(images, startIndex);
+  div.innerHTML = createOverlayHTML(images.length, startIndex);
   document.body.appendChild(div.firstElementChild as HTMLElement);
 
   // Get elements
@@ -189,26 +259,47 @@ export function openGallery(images: Image[], startIndex = 0) {
   // State
   let currentIndex = startIndex;
 
+  // Load initial slides
+  loadSlidesInRange(container, images, startIndex);
+
+  // Prefetch next image
+  const nextImageIndex = (startIndex + 1) % images.length;
+  if (images[nextImageIndex]) {
+    prefetchImage(images[nextImageIndex].src);
+  }
+
   // Navigation functions
   const goToNext = () => {
     currentIndex = nextIndex(currentIndex, images.length);
-    scrollToIndex(container, currentIndex);
+    scrollToIndex(container, currentIndex, images);
     updateCounter(currentIndex);
     updateURL(currentIndex);
+
+    // Prefetch next image after this one
+    const nextImageIndex = (currentIndex + 1) % images.length;
+    if (images[nextImageIndex]) {
+      prefetchImage(images[nextImageIndex].src);
+    }
   };
 
   const goToPrev = () => {
     currentIndex = prevIndex(currentIndex, images.length);
-    scrollToIndex(container, currentIndex);
+    scrollToIndex(container, currentIndex, images);
     updateCounter(currentIndex);
     updateURL(currentIndex);
+
+    // Prefetch previous image before this one
+    const prevImageIndex = (currentIndex - 1 + images.length) % images.length;
+    if (images[prevImageIndex]) {
+      prefetchImage(images[prevImageIndex].src);
+    }
   };
 
   // Handle browser back/forward
   const handlePopState = (e: PopStateEvent) => {
     if (e.state?.photoIndex !== undefined) {
       currentIndex = e.state.photoIndex;
-      scrollToIndex(container, currentIndex);
+      scrollToIndex(container, currentIndex, images);
       updateCounter(currentIndex);
     } else {
       // User went back before gallery was opened
@@ -238,10 +329,15 @@ export function openGallery(images: Image[], startIndex = 0) {
   // Animate in
   fadeIn(overlay);
 
-  // Scroll to start position instantly
+  // Scroll to start position
   setTimeout(() => {
     const slideWidth = window.innerWidth;
-    container.scrollLeft = startIndex * slideWidth;
+    const slides = Array.from(container.querySelectorAll('.gallery-slide'));
+    const targetSlide = slides.find(s => parseInt((s as HTMLElement).dataset.index || '0') === startIndex);
+    if (targetSlide) {
+      const slideIndexInDOM = slides.indexOf(targetSlide);
+      container.scrollLeft = slideIndexInDOM * slideWidth;
+    }
   }, 0);
 
   // Set initial URL

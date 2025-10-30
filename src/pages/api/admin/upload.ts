@@ -161,29 +161,32 @@ async function processFile(file: File, category: string, featured: boolean) {
     const safeName = file.name.replace(/[^a-z0-9.-]/gi, '_');
     const filename = `${timestamp}-${safeName}`;
 
-    // Save file to public/uploads
-    const uploadDir = isVideo
-      ? path.join(process.cwd(), 'public/uploads/videos')
-      : path.join(process.cwd(), 'public/uploads/photos');
-
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-
     const buffer = await file.arrayBuffer();
     let imageWidth = 1920;
     let imageHeight = 1080;
 
-    // Create markdown content file directory
-    const contentDir = path.join(process.cwd(), `src/content/${category}`);
-    if (!existsSync(contentDir)) {
-      await mkdir(contentDir, { recursive: true });
-    }
+    // Only create directories in development mode
+    if (isDev) {
+      // Save file to public/uploads
+      const uploadDir = isVideo
+        ? path.join(process.cwd(), 'public/uploads/videos')
+        : path.join(process.cwd(), 'public/uploads/photos');
 
-    // Ensure .astro directory exists for data-store
-    const astroDir = path.join(process.cwd(), '.astro');
-    if (!existsSync(astroDir)) {
-      await mkdir(astroDir, { recursive: true });
+      if (!existsSync(uploadDir)) {
+        await mkdir(uploadDir, { recursive: true });
+      }
+
+      // Create markdown content file directory
+      const contentDir = path.join(process.cwd(), `src/content/${category}`);
+      if (!existsSync(contentDir)) {
+        await mkdir(contentDir, { recursive: true });
+      }
+
+      // Ensure .astro directory exists for data-store
+      const astroDir = path.join(process.cwd(), '.astro');
+      if (!existsSync(astroDir)) {
+        await mkdir(astroDir, { recursive: true });
+      }
     }
 
     if (!isVideo) {
@@ -191,25 +194,11 @@ async function processFile(file: File, category: string, featured: boolean) {
       const webpFilename = filename.replace(/\.(jpg|jpeg|png)$/i, '.webp');
       const thumbFilename = filename.replace(/\.(jpg|jpeg|png)$/i, '-thumb.webp');
 
-      const filePath = path.join(uploadDir, webpFilename);
-      const thumbPath = path.join(uploadDir, thumbFilename);
-
       const imageBuffer = Buffer.from(buffer);
       const image = sharp(imageBuffer);
       const metadata = await image.metadata();
       imageWidth = metadata.width || 1920;
       imageHeight = metadata.height || 1080;
-
-      // Generate full-size WebP with quality 95
-      await sharp(imageBuffer)
-        .webp({ quality: 95 })
-        .toFile(filePath);
-
-      // Generate thumbnail (max 800px width) with quality 85 for fast loading
-      await sharp(imageBuffer)
-        .resize(800, null, { withoutEnlargement: true })
-        .webp({ quality: 85 })
-        .toFile(thumbPath);
 
       const photoContentPath = `/uploads/photos/${webpFilename}`;
       const thumbContentPath = `/uploads/photos/${thumbFilename}`;
@@ -230,6 +219,22 @@ order: 0
 
       // Write locally (for dev) or commit to GitHub (for prod)
       if (isDev) {
+        const uploadDir = path.join(process.cwd(), 'public/uploads/photos');
+        const contentDir = path.join(process.cwd(), `src/content/${category}`);
+        const filePath = path.join(uploadDir, webpFilename);
+        const thumbPath = path.join(uploadDir, thumbFilename);
+
+        // Generate full-size WebP with quality 95
+        await sharp(imageBuffer)
+          .webp({ quality: 95 })
+          .toFile(filePath);
+
+        // Generate thumbnail (max 800px width) with quality 85 for fast loading
+        await sharp(imageBuffer)
+          .resize(800, null, { withoutEnlargement: true })
+          .webp({ quality: 85 })
+          .toFile(thumbPath);
+
         await writeFile(path.join(contentDir, mdFilename), markdown);
       } else {
         // Commit to GitHub in production
@@ -249,37 +254,15 @@ order: 0
         content: mdFilename
       };
     } else {
-      // For videos, save as-is
-      const filePath = path.join(uploadDir, filename);
-      await writeFile(filePath, Buffer.from(buffer));
-    }
+      // For videos
+      let thumbnailWidth = 1920;
+      let thumbnailHeight = 1080;
 
-    // Generate thumbnail for videos
-    let thumbnailPath = '';
-    let thumbnailWidth = 1920;
-    let thumbnailHeight = 1080;
+      const thumbnailFilename = `${timestamp}-${safeName.replace(/\.[^/.]+$/, '')}-thumb.jpg`;
+      const thumbnailPath = `/uploads/photos/${thumbnailFilename}`;
+      const videoContentPath = `/uploads/videos/${filename}`;
 
-    const thumbnailFilename = `${timestamp}-${safeName.replace(/\.[^/.]+$/, '')}-thumb.jpg`;
-    const filePath = path.join(uploadDir, filename);
-
-    await new Promise<void>((resolve, reject) => {
-      ffmpeg(filePath)
-        .screenshots({
-          timestamps: ['00:00:01'],
-          filename: thumbnailFilename,
-          folder: path.join(process.cwd(), 'public/uploads/photos'),
-          size: '1920x1080'
-        })
-        .on('end', () => resolve())
-        .on('error', (err) => reject(err));
-    });
-
-    thumbnailPath = `/uploads/photos/${thumbnailFilename}`;
-
-    // Create markdown content file for video
-    const videoContentPath = `/uploads/videos/${filename}`;
-
-    const markdown = `---
+      const markdown = `---
 title: "${file.name.replace(/\.[^/.]+$/, '')}"
 description: ""
 video: "${videoContentPath}"
@@ -291,21 +274,47 @@ date: ${new Date().toISOString()}
 order: 0
 ---`;
 
-    const mdFilename = `${timestamp}-${safeName.replace(/\.[^/.]+$/, '')}.md`;
+      const mdFilename = `${timestamp}-${safeName.replace(/\.[^/.]+$/, '')}.md`;
 
-    // Write locally (for dev) or commit to GitHub (for prod)
-    if (isDev) {
-      await writeFile(path.join(contentDir, mdFilename), markdown);
-    } else {
-      // Commit to GitHub in production
-      const videoBuffer = Buffer.from(buffer);
-      const thumbnailBuffer = await sharp(path.join(process.cwd(), `public/uploads/photos/${thumbnailFilename}`)).toBuffer();
+      // Write locally (for dev) or commit to GitHub (for prod)
+      if (isDev) {
+        const uploadDir = path.join(process.cwd(), 'public/uploads/videos');
+        const contentDir = path.join(process.cwd(), `src/content/${category}`);
+        const filePath = path.join(uploadDir, filename);
 
-      await Promise.all([
-        commitToGitHub(`public/uploads/videos/${filename}`, videoBuffer, `Add video ${filename}`),
-        commitToGitHub(`public/uploads/photos/${thumbnailFilename}`, thumbnailBuffer, `Add thumbnail ${thumbnailFilename}`),
-        commitToGitHub(`src/content/${category}/${mdFilename}`, Buffer.from(markdown), `Add ${file.name}`)
-      ]);
+        // Save video file
+        await writeFile(filePath, Buffer.from(buffer));
+
+        // Generate thumbnail for videos
+        await new Promise<void>((resolve, reject) => {
+          ffmpeg(filePath)
+            .screenshots({
+              timestamps: ['00:00:01'],
+              filename: thumbnailFilename,
+              folder: path.join(process.cwd(), 'public/uploads/photos'),
+              size: '1920x1080'
+            })
+            .on('end', () => resolve())
+            .on('error', (err) => reject(err));
+        });
+
+        await writeFile(path.join(contentDir, mdFilename), markdown);
+      } else {
+        // Commit to GitHub in production
+        // For production, we need to generate thumbnail from buffer in memory
+        // This is more complex for videos, so for now we'll use a placeholder approach
+        // In a full implementation, you'd want to use a service like AWS Lambda with ffmpeg layers
+        const videoBuffer = Buffer.from(buffer);
+
+        // Create a simple placeholder thumbnail (you may want to improve this)
+        const placeholderThumb = Buffer.from('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+
+        await Promise.all([
+          commitToGitHub(`public/uploads/videos/${filename}`, videoBuffer, `Add video ${filename}`),
+          commitToGitHub(`public/uploads/photos/${thumbnailFilename}`, placeholderThumb, `Add thumbnail ${thumbnailFilename}`),
+          commitToGitHub(`src/content/${category}/${mdFilename}`, Buffer.from(markdown), `Add ${file.name}`)
+        ]);
+      }
     }
 
     return {

@@ -30,37 +30,28 @@ async function deleteFilesFromGitHub(filePaths: string[], message: string) {
     });
     const currentCommitSha = refData.object.sha;
 
-    // Get the current tree
+    // Get the current tree SHA
     const { data: commitData } = await octokit.git.getCommit({
       owner,
       repo,
       commit_sha: currentCommitSha
     });
-    const currentTreeSha = commitData.tree.sha;
+    const baseTreeSha = commitData.tree.sha;
 
-    // Get the full tree
-    const { data: treeData } = await octokit.git.getTree({
+    // Create tree entries with null sha to delete files
+    const tree = filePaths.map(filePath => ({
+      path: filePath,
+      mode: '100644' as const,
+      type: 'blob' as const,
+      sha: null as any // null sha means delete the file
+    }));
+
+    // Create a new tree with the deletions
+    const { data: newTree } = await octokit.git.createTree({
       owner,
       repo,
-      tree_sha: currentTreeSha,
-      recursive: 'true'
-    });
-
-    // Filter out the files we want to delete
-    const newTree = treeData.tree
-      .filter(item => !filePaths.includes(item.path || ''))
-      .map(item => ({
-        path: item.path!,
-        mode: item.mode as '100644' | '100755' | '040000' | '160000' | '120000',
-        type: item.type as 'blob' | 'tree' | 'commit',
-        sha: item.sha!
-      }));
-
-    // Create a new tree without the deleted files
-    const { data: newTreeData } = await octokit.git.createTree({
-      owner,
-      repo,
-      tree: newTree
+      base_tree: baseTreeSha,
+      tree
     });
 
     // Create a new commit
@@ -68,7 +59,7 @@ async function deleteFilesFromGitHub(filePaths: string[], message: string) {
       owner,
       repo,
       message,
-      tree: newTreeData.sha,
+      tree: newTree.sha,
       parents: [currentCommitSha]
     });
 

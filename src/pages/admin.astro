@@ -34,11 +34,18 @@ if (session) {
   } catch {}
 }
 
-// Fetch all uploaded content
+// Get counts only for initial display
 const overview = isAuthenticated ? await getCollection('overview') : [];
 const portraits = isAuthenticated ? await getCollection('portraits') : [];
 const bitsPieces = isAuthenticated ? await getCollection('bits-pieces') : [];
 const film = isAuthenticated ? await getCollection('film') : [];
+
+const categoryCounts = {
+  overview: overview.length,
+  portraits: portraits.length,
+  'bits-pieces': bitsPieces.length,
+  film: film.length
+};
 ---
 
 <BaseLayout title="Admin - André Branco" description="Content management">
@@ -152,104 +159,46 @@ const film = isAuthenticated ? await getCollection('film') : [];
             </button>
           </div>
 
-          <!-- Overview -->
-          {overview.length > 0 && (
-            <div class="mb-12">
-              <h3 class="text-xl font-light mb-4">Overview ({overview.length})</h3>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {overview.map((item) => (
-                  <div class="relative aspect-square overflow-hidden rounded-lg bg-white/5 group">
-                    <input
-                      type="checkbox"
-                      class="item-checkbox absolute top-2 left-2 w-5 h-5 rounded cursor-pointer z-10"
-                      data-id={item.id}
-                      data-category="overview"
-                      data-file={item.data.image}
-                      data-thumbnail={item.data.thumbnail}
-                    />
-                    <img src={item.data.thumbnail || item.data.image} alt={item.data.title} class="w-full h-full object-cover" />
+          <!-- Collapsible Sections -->
+          <div class="space-y-4">
+            {Object.entries(categoryCounts).map(([category, count]) => (
+              <div class="border border-white/20 rounded-lg overflow-hidden" data-category={category}>
+                <button
+                  class="category-toggle w-full px-6 py-4 flex justify-between items-center hover:bg-white/5 transition-colors"
+                  data-category={category}
+                >
+                  <div class="flex items-center gap-4">
+                    <span class="text-xl font-light capitalize">
+                      {category === 'bits-pieces' ? 'Bits & Pieces' : category.charAt(0).toUpperCase() + category.slice(1)}
+                    </span>
+                    <span class="text-white/40 text-sm">({count})</span>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                  <svg class="category-chevron w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
 
-          <!-- Portraits -->
-          {portraits.length > 0 && (
-            <div class="mb-12">
-              <h3 class="text-xl font-light mb-4">Portraits ({portraits.length})</h3>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {portraits.map((item) => (
-                  <div class="relative aspect-square overflow-hidden rounded-lg bg-white/5 group">
-                    <input
-                      type="checkbox"
-                      class="item-checkbox absolute top-2 left-2 w-5 h-5 rounded cursor-pointer z-10"
-                      data-id={item.id}
-                      data-category="portraits"
-                      data-file={item.data.image}
-                      data-thumbnail={item.data.thumbnail}
-                    />
-                    <img src={item.data.image} alt={item.data.title} class="w-full h-full object-cover" />
-                    {item.data.featured && (
-                      <span class="absolute top-2 right-2 bg-[#e8e5a0] text-black text-xs px-2 py-1 rounded">Featured</span>
-                    )}
+                <div class="category-content hidden" data-category={category}>
+                  <div class="px-6 py-4 border-t border-white/10">
+                    <div class="flex justify-between items-center mb-4">
+                      <p class="text-sm text-white/60">Loading...</p>
+                      <button
+                        class="save-order-btn hidden text-[#e8e5a0] text-sm hover:text-[#f0edba] transition-colors"
+                        data-category={category}
+                      >
+                        Save Order
+                      </button>
+                    </div>
+                    <div class="category-grid grid grid-cols-2 md:grid-cols-4 gap-4" data-category={category}>
+                      <!-- Photos will be loaded here -->
+                    </div>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
 
-          <!-- Bits & Pieces -->
-          {bitsPieces.length > 0 && (
-            <div class="mb-12">
-              <h3 class="text-xl font-light mb-4">Bits & Pieces ({bitsPieces.length})</h3>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {bitsPieces.map((item) => (
-                  <div class="relative aspect-square overflow-hidden rounded-lg bg-white/5 group">
-                    <input
-                      type="checkbox"
-                      class="item-checkbox absolute top-2 left-2 w-5 h-5 rounded cursor-pointer z-10"
-                      data-id={item.id}
-                      data-category="bits-pieces"
-                      data-file={item.data.image}
-                      data-thumbnail={item.data.thumbnail}
-                    />
-                    <img src={item.data.image} alt={item.data.title} class="w-full h-full object-cover" />
-                    {item.data.featured && (
-                      <span class="absolute top-2 right-2 bg-[#e8e5a0] text-black text-xs px-2 py-1 rounded">Featured</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <!-- Film -->
-          {film.length > 0 && (
-            <div class="mb-12">
-              <h3 class="text-xl font-light mb-4">Film ({film.length})</h3>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {film.map((item) => (
-                  <div class="relative aspect-square overflow-hidden rounded-lg bg-white/5 group">
-                    <input
-                      type="checkbox"
-                      class="item-checkbox absolute top-2 left-2 w-5 h-5 rounded cursor-pointer z-10"
-                      data-id={item.id}
-                      data-category="film"
-                      data-file={item.data.video}
-                      data-thumbnail={item.data.thumbnail}
-                    />
-                    <img src={item.data.thumbnail} alt={item.data.title} class="w-full h-full object-cover" />
-                    {item.data.featured && (
-                      <span class="absolute top-2 right-2 bg-[#e8e5a0] text-black text-xs px-2 py-1 rounded">Featured</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {portraits.length === 0 && bitsPieces.length === 0 && film.length === 0 && (
+          {categoryCounts.overview === 0 && categoryCounts.portraits === 0 && categoryCounts['bits-pieces'] === 0 && categoryCounts.film === 0 && (
             <p class="text-white/40 text-center py-12">No content uploaded yet.</p>
           )}
         </div>
@@ -410,12 +359,195 @@ const film = isAuthenticated ? await getCollection('film') : [];
       };
     }
 
+    // Category management
+    const loadedCategories = new Set<string>();
+    let draggedElement: HTMLElement | null = null;
+    let categoryItems: Record<string, any[]> = {};
+
+    // Handle collapse/expand
+    const categoryToggles = document.querySelectorAll('.category-toggle');
+    categoryToggles.forEach(toggle => {
+      toggle.addEventListener('click', async (e) => {
+        const category = (e.currentTarget as HTMLElement).dataset.category;
+        if (!category) return;
+
+        const content = document.querySelector(`.category-content[data-category="${category}"]`);
+        const chevron = (e.currentTarget as HTMLElement).querySelector('.category-chevron');
+
+        if (content?.classList.contains('hidden')) {
+          // Expand
+          content.classList.remove('hidden');
+          chevron?.classList.add('rotate-180');
+
+          // Load photos if not already loaded
+          if (!loadedCategories.has(category)) {
+            await loadCategoryPhotos(category);
+            loadedCategories.add(category);
+          }
+        } else {
+          // Collapse
+          content?.classList.add('hidden');
+          chevron?.classList.remove('rotate-180');
+        }
+      });
+    });
+
+    // Load photos for a category
+    async function loadCategoryPhotos(category: string) {
+      try {
+        const response = await fetch(`/api/admin/content?category=${category}`);
+        if (!response.ok) throw new Error('Failed to load photos');
+
+        const data = await response.json();
+        categoryItems[category] = data.items;
+
+        const grid = document.querySelector(`.category-grid[data-category="${category}"]`);
+        const loadingText = grid?.parentElement?.querySelector('p');
+
+        if (loadingText) loadingText.remove();
+
+        if (grid && data.items.length > 0) {
+          grid.innerHTML = data.items.map((item: any, index: number) => {
+            const isVideo = !!item.data.video;
+            const imageUrl = item.data.thumbnail || item.data.image;
+            const file = item.data.video || item.data.image;
+
+            return `
+              <div class="photo-item relative aspect-square overflow-hidden rounded-lg bg-white/5 group cursor-move"
+                   draggable="true"
+                   data-id="${item.id}"
+                   data-category="${category}"
+                   data-file="${file}"
+                   data-thumbnail="${item.data.thumbnail || ''}"
+                   data-order="${index}">
+                <input
+                  type="checkbox"
+                  class="item-checkbox absolute top-2 left-2 w-5 h-5 rounded cursor-pointer z-10"
+                  data-id="${item.id}"
+                  data-category="${category}"
+                  data-file="${file}"
+                  data-thumbnail="${item.data.thumbnail || ''}"
+                />
+                <div class="drag-handle absolute top-2 right-2 bg-black/50 p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-move z-10">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 5h2v2H9V5zm0 6h2v2H9v-2zm0 6h2v2H9v-2zm4-12h2v2h-2V5zm0 6h2v2h-2v-2zm0 6h2v2h-2v-2z"/>
+                  </svg>
+                </div>
+                <img src="${imageUrl}" alt="${item.data.title}" class="w-full h-full object-cover" />
+                ${item.data.featured ? '<span class="absolute bottom-2 right-2 bg-[#e8e5a0] text-black text-xs px-2 py-1 rounded">Featured</span>' : ''}
+              </div>
+            `;
+          }).join('');
+
+          // Setup drag and drop
+          setupDragAndDrop(category);
+
+          // Setup checkboxes
+          updateDeleteButton();
+          const checkboxes = grid.querySelectorAll('.item-checkbox');
+          checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateDeleteButton);
+          });
+        } else if (grid) {
+          grid.innerHTML = '<p class="text-white/40 col-span-full text-center py-8">No items in this category</p>';
+        }
+      } catch (err) {
+        console.error('Error loading photos:', err);
+        const grid = document.querySelector(`.category-grid[data-category="${category}"]`);
+        if (grid) {
+          grid.innerHTML = '<p class="text-red-400 col-span-full text-center py-8">Failed to load photos</p>';
+        }
+      }
+    }
+
+    // Setup drag and drop for ordering
+    function setupDragAndDrop(category: string) {
+      const grid = document.querySelector(`.category-grid[data-category="${category}"]`);
+      if (!grid) return;
+
+      const items = grid.querySelectorAll('.photo-item');
+
+      items.forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+          draggedElement = e.target as HTMLElement;
+          draggedElement.classList.add('opacity-50');
+        });
+
+        item.addEventListener('dragend', (e) => {
+          if (draggedElement) {
+            draggedElement.classList.remove('opacity-50');
+            draggedElement = null;
+          }
+        });
+
+        item.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          const target = e.currentTarget as HTMLElement;
+          if (draggedElement && draggedElement !== target) {
+            const rect = target.getBoundingClientRect();
+            const midpoint = rect.left + rect.width / 2;
+            if (e.clientX < midpoint) {
+              target.parentElement?.insertBefore(draggedElement, target);
+            } else {
+              target.parentElement?.insertBefore(draggedElement, target.nextSibling);
+            }
+          }
+        });
+      });
+
+      // Show save button when order changes
+      grid.addEventListener('dragend', () => {
+        const saveBtn = document.querySelector(`.save-order-btn[data-category="${category}"]`);
+        saveBtn?.classList.remove('hidden');
+      });
+    }
+
+    // Save order
+    const saveOrderBtns = document.querySelectorAll('.save-order-btn');
+    saveOrderBtns.forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const category = (e.target as HTMLElement).dataset.category;
+        if (!category) return;
+
+        const grid = document.querySelector(`.category-grid[data-category="${category}"]`);
+        const items = Array.from(grid?.querySelectorAll('.photo-item') || []);
+
+        const orderedItems = items.map((item) => ({
+          id: (item as HTMLElement).dataset.id
+        }));
+
+        try {
+          (btn as HTMLButtonElement).disabled = true;
+          (btn as HTMLButtonElement).textContent = 'Saving...';
+
+          const response = await fetch('/api/admin/reorder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ category, items: orderedItems })
+          });
+
+          if (!response.ok) throw new Error('Failed to save order');
+
+          (btn as HTMLButtonElement).textContent = 'Saved!';
+          setTimeout(() => {
+            btn.classList.add('hidden');
+            (btn as HTMLButtonElement).textContent = 'Save Order';
+            (btn as HTMLButtonElement).disabled = false;
+          }, 2000);
+        } catch (err) {
+          console.error('Error saving order:', err);
+          alert('Failed to save order: ' + (err as Error).message);
+          (btn as HTMLButtonElement).disabled = false;
+          (btn as HTMLButtonElement).textContent = 'Save Order';
+        }
+      });
+    });
+
     // Handle bulk delete
     const deleteBtn = document.getElementById('deleteSelectedBtn');
-    const checkboxes = document.querySelectorAll('.item-checkbox');
 
-    // Show/hide delete button based on selection
     function updateDeleteButton() {
+      const checkboxes = document.querySelectorAll('.item-checkbox');
       const selected = Array.from(checkboxes).filter((cb: any) => cb.checked);
       if (selected.length > 0) {
         deleteBtn?.classList.remove('hidden');
@@ -426,11 +558,8 @@ const film = isAuthenticated ? await getCollection('film') : [];
       }
     }
 
-    checkboxes.forEach(cb => {
-      cb.addEventListener('change', updateDeleteButton);
-    });
-
     deleteBtn?.addEventListener('click', async () => {
+      const checkboxes = document.querySelectorAll('.item-checkbox');
       const selected = Array.from(checkboxes).filter((cb: any) => cb.checked);
 
       if (selected.length === 0) {
@@ -445,7 +574,6 @@ const film = isAuthenticated ? await getCollection('film') : [];
         }
 
         let completed = 0;
-        // Delete each selected item
         for (const checkbox of selected) {
           const cb = checkbox as HTMLInputElement;
           const id = cb.dataset.id;
@@ -470,7 +598,6 @@ const film = isAuthenticated ? await getCollection('film') : [];
           }
         }
 
-        // Refresh page
         window.location.reload();
       } catch (err) {
         console.error('Delete error:', err);

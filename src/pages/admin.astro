@@ -189,7 +189,7 @@ const categoryCounts = {
                         Save Order
                       </button>
                     </div>
-                    <div class="category-grid grid grid-cols-2 md:grid-cols-4 gap-4" data-category={category}>
+                    <div class="category-grid masonry-admin-grid" data-category={category}>
                       <!-- Photos will be loaded here -->
                     </div>
                   </div>
@@ -363,6 +363,7 @@ const categoryCounts = {
     const loadedCategories = new Set<string>();
     let draggedElement: HTMLElement | null = null;
     let categoryItems: Record<string, any[]> = {};
+    const visualOrder: Record<string, string[]> = {};
 
     // Handle collapse/expand
     const categoryToggles = document.querySelectorAll('.category-toggle');
@@ -411,10 +412,11 @@ const categoryCounts = {
             const isVideo = !!item.data.video;
             const imageUrl = item.data.thumbnail || item.data.image;
             const file = item.data.video || item.data.image;
+            const width = item.data.thumbnailWidth || item.data.width || '';
+            const height = item.data.thumbnailHeight || item.data.height || '';
 
             return `
-              <div class="photo-item relative aspect-square overflow-hidden rounded-lg bg-white/5 group cursor-move"
-                   draggable="true"
+              <div class="photo-item relative overflow-hidden rounded-lg bg-white/5 group"
                    data-id="${item.id}"
                    data-category="${category}"
                    data-file="${file}"
@@ -433,11 +435,14 @@ const categoryCounts = {
                     <path d="M9 5h2v2H9V5zm0 6h2v2H9v-2zm0 6h2v2H9v-2zm4-12h2v2h-2V5zm0 6h2v2h-2v-2zm0 6h2v2h-2v-2z"/>
                   </svg>
                 </div>
-                <img src="${imageUrl}" alt="${item.data.title}" class="w-full h-full object-cover" />
+                <img src="${imageUrl}" alt="${item.data.title}" width="${width}" height="${height}" class="w-full h-auto block" />
                 ${item.data.featured ? '<span class="absolute bottom-2 right-2 bg-[#e8e5a0] text-black text-xs px-2 py-1 rounded">Featured</span>' : ''}
               </div>
             `;
           }).join('');
+
+          // Initialize visual order
+          visualOrder[category] = data.items.map((item: any) => item.id);
 
           // Setup drag and drop
           setupDragAndDrop(category);
@@ -460,45 +465,72 @@ const categoryCounts = {
       }
     }
 
-    // Setup drag and drop for ordering
+    // Setup drag and drop for ordering using native HTML5
     function setupDragAndDrop(category: string) {
-      const grid = document.querySelector(`.category-grid[data-category="${category}"]`);
+      const grid = document.querySelector(`.category-grid[data-category="${category}"]`) as HTMLElement;
       if (!grid) return;
 
       const items = grid.querySelectorAll('.photo-item');
 
-      items.forEach(item => {
+      items.forEach((item) => {
+        const dragHandle = item.querySelector('.drag-handle') as HTMLElement;
+
+        dragHandle.addEventListener('mousedown', () => {
+          (item as HTMLElement).draggable = true;
+        });
+
         item.addEventListener('dragstart', (e) => {
-          draggedElement = e.target as HTMLElement;
-          draggedElement.classList.add('opacity-50');
+          draggedElement = item as HTMLElement;
+          (item as HTMLElement).style.opacity = '0.5';
         });
 
         item.addEventListener('dragend', (e) => {
-          if (draggedElement) {
-            draggedElement.classList.remove('opacity-50');
-            draggedElement = null;
-          }
+          (item as HTMLElement).style.opacity = '1';
+          (item as HTMLElement).draggable = false;
+
+          // Show save button after drag
+          const saveBtn = document.querySelector(`.save-order-btn[data-category="${category}"]`);
+          saveBtn?.classList.remove('hidden');
         });
 
         item.addEventListener('dragover', (e) => {
           e.preventDefault();
-          const target = e.currentTarget as HTMLElement;
-          if (draggedElement && draggedElement !== target) {
-            const rect = target.getBoundingClientRect();
-            const midpoint = rect.left + rect.width / 2;
-            if (e.clientX < midpoint) {
-              target.parentElement?.insertBefore(draggedElement, target);
+        });
+
+        item.addEventListener('drop', (e) => {
+          e.preventDefault();
+          if (draggedElement && draggedElement !== item) {
+            const draggedId = draggedElement.dataset.id!;
+            const targetId = (item as HTMLElement).dataset.id!;
+
+            // Update visual order
+            const currentOrder = visualOrder[category];
+            const draggedIndex = currentOrder.indexOf(draggedId);
+            const targetIndex = currentOrder.indexOf(targetId);
+
+            // Remove from old position
+            currentOrder.splice(draggedIndex, 1);
+
+            // Insert at new position
+            const newTargetIndex = currentOrder.indexOf(targetId);
+            if (draggedIndex < targetIndex) {
+              currentOrder.splice(newTargetIndex + 1, 0, draggedId);
             } else {
-              target.parentElement?.insertBefore(draggedElement, target.nextSibling);
+              currentOrder.splice(newTargetIndex, 0, draggedId);
+            }
+
+            // Also update DOM for visual feedback (even though it won't work perfectly with masonry)
+            const allItems = Array.from(grid.querySelectorAll('.photo-item'));
+            const domDraggedIndex = allItems.indexOf(draggedElement);
+            const domTargetIndex = allItems.indexOf(item as Element);
+
+            if (domDraggedIndex < domTargetIndex) {
+              item.after(draggedElement);
+            } else {
+              item.before(draggedElement);
             }
           }
         });
-      });
-
-      // Show save button when order changes
-      grid.addEventListener('dragend', () => {
-        const saveBtn = document.querySelector(`.save-order-btn[data-category="${category}"]`);
-        saveBtn?.classList.remove('hidden');
       });
     }
 
@@ -509,12 +541,14 @@ const categoryCounts = {
         const category = (e.target as HTMLElement).dataset.category;
         if (!category) return;
 
-        const grid = document.querySelector(`.category-grid[data-category="${category}"]`);
-        const items = Array.from(grid?.querySelectorAll('.photo-item') || []);
+        // Use the tracked visual order instead of DOM order
+        const order = visualOrder[category];
+        if (!order || order.length === 0) {
+          alert('No order to save');
+          return;
+        }
 
-        const orderedItems = items.map((item) => ({
-          id: (item as HTMLElement).dataset.id
-        }));
+        const orderedItems = order.map(id => ({ id }));
 
         try {
           (btn as HTMLButtonElement).disabled = true;
@@ -526,14 +560,14 @@ const categoryCounts = {
             body: JSON.stringify({ category, items: orderedItems })
           });
 
-          if (!response.ok) throw new Error('Failed to save order');
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to save order');
+          }
 
-          (btn as HTMLButtonElement).textContent = 'Saved!';
-          setTimeout(() => {
-            btn.classList.add('hidden');
-            (btn as HTMLButtonElement).textContent = 'Save Order';
-            (btn as HTMLButtonElement).disabled = false;
-          }, 2000);
+          // Show success message
+          (btn as HTMLButtonElement).textContent = 'Saved! Restart server to see changes';
+          (btn as HTMLButtonElement).disabled = false;
         } catch (err) {
           console.error('Error saving order:', err);
           alert('Failed to save order: ' + (err as Error).message);
@@ -609,4 +643,31 @@ const categoryCounts = {
       }
     });
   </script>
+
+  <style>
+    .masonry-admin-grid {
+      column-count: 2;
+      column-gap: 1.5rem;
+      width: 100%;
+    }
+
+    @media (min-width: 768px) {
+      .masonry-admin-grid {
+        column-count: 4;
+        column-gap: 1.5rem;
+      }
+    }
+
+    .masonry-admin-grid .photo-item {
+      break-inside: avoid;
+      margin-bottom: 1.5rem;
+      display: block;
+    }
+
+    .masonry-admin-grid .photo-item img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+  </style>
 </BaseLayout>

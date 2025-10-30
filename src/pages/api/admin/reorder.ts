@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { readFile, writeFile } from 'fs/promises';
+import { readFile, rename } from 'fs/promises';
 import path from 'path';
 import { Octokit } from '@octokit/rest';
 
@@ -9,7 +9,11 @@ const octokit = new Octokit({
 });
 
 // Helper to commit files to GitHub in a single commit
-async function commitFilesToGitHub(files: Array<{ path: string; content: Buffer }>, message: string) {
+async function commitFilesToGitHub(
+  files: Array<{ path: string; content: Buffer }>,
+  message: string,
+  filesToDelete: string[] = []
+) {
   if (isDev) return; // Skip in development
 
   const owner = import.meta.env.GITHUB_OWNER;
@@ -38,7 +42,7 @@ async function commitFilesToGitHub(files: Array<{ path: string; content: Buffer 
     });
     const baseTreeSha = commitData.tree.sha;
 
-    // Create blobs for all files
+    // Create blobs for new/updated files
     const blobPromises = files.map(async (file) => {
       const { data: blobData } = await octokit.git.createBlob({
         owner,
@@ -54,7 +58,15 @@ async function commitFilesToGitHub(files: Array<{ path: string; content: Buffer 
       };
     });
 
-    const tree = await Promise.all(blobPromises);
+    // Add delete entries (sha: null means delete)
+    const deleteEntries = filesToDelete.map(filePath => ({
+      path: filePath,
+      mode: '100644' as const,
+      type: 'blob' as const,
+      sha: null as any  // null sha means delete
+    }));
+
+    const tree = [...await Promise.all(blobPromises), ...deleteEntries];
 
     // Create a new tree with all the files
     const { data: newTree } = await octokit.git.createTree({
@@ -111,34 +123,90 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return new Response('Invalid request', { status: 400 });
     }
 
-    const filesToCommit: Array<{ path: string; content: Buffer }> = [];
+    // Remove duplicates from items array
+    const uniqueItems = Array.from(new Map(items.map(item => [item.id, item])).values());
 
-    // Update order field in each markdown file
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      const filePath = path.join(process.cwd(), `src/content/${category}/${item.id}`);
+    const filesToRename: Array<{ oldPath: string; newPath: string; content: Buffer }> = [];
 
-      // Read the markdown file
-      const content = await readFile(filePath, 'utf-8');
+    // Two-phase rename to avoid conflicts
+    if (isDev) {
+      const { stat } = await import('fs/promises');
 
-      // Update the order field in frontmatter
-      const updatedContent = content.replace(/^order: \d+$/m, `order: ${i + 1}`);
+      // Phase 1: Rename all files to temporary names
+      const tempRenames = [];
+      for (let i = 0; i < uniqueItems.length; i++) {
+        const item = uniqueItems[i];
+        const oldFilename = item.id;
+        const tempFilename = `__temp_${i}_${oldFilename}`;
 
-      // Write locally (for dev) or add to batch commit (for prod)
-      if (isDev) {
-        await writeFile(filePath, updatedContent);
-      } else {
-        filesToCommit.push({
-          path: `src/content/${category}/${item.id}`,
-          content: Buffer.from(updatedContent)
+        const oldFilePath = path.join(process.cwd(), `src/content/${category}/${oldFilename}`);
+        const tempFilePath = path.join(process.cwd(), `src/content/${category}/${tempFilename}`);
+
+        // Check if file exists before renaming
+        try {
+          await stat(oldFilePath);
+        } catch (error) {
+          console.error(`File not found: ${oldFilePath}`);
+          continue; // Skip this file if it doesn't exist
+        }
+
+        await rename(oldFilePath, tempFilePath);
+        tempRenames.push({ tempFilename, index: i });
+      }
+
+      // Phase 2: Rename temp files to final names
+      for (const { tempFilename, index } of tempRenames) {
+        // Remove the __temp_N_ prefix to get original filename
+        const originalFilename = tempFilename.replace(`__temp_${index}_`, '');
+
+        // Extract the part after the first dash from original filename
+        const dashIndex = originalFilename.indexOf('-');
+        const originalName = dashIndex > 0 ? originalFilename.substring(dashIndex + 1) : originalFilename;
+
+        const orderPrefix = String(index + 1).padStart(4, '0');
+        const newFilename = `${orderPrefix}-${originalName}`;
+
+        const tempFilePath = path.join(process.cwd(), `src/content/${category}/${tempFilename}`);
+        const newFilePath = path.join(process.cwd(), `src/content/${category}/${newFilename}`);
+
+        await rename(tempFilePath, newFilePath);
+      }
+    } else {
+      // Production: prepare for GitHub commit
+      for (let i = 0; i < uniqueItems.length; i++) {
+        const item = uniqueItems[i];
+        const oldFilename = item.id;
+        const dashIndex = oldFilename.indexOf('-');
+        const originalName = dashIndex > 0 ? oldFilename.substring(dashIndex + 1) : oldFilename;
+
+        const orderPrefix = String(i + 1).padStart(4, '0');
+        const newFilename = `${orderPrefix}-${originalName}`;
+
+        if (oldFilename === newFilename) continue;
+
+        const oldFilePath = path.join(process.cwd(), `src/content/${category}/${oldFilename}`);
+        const content = await readFile(oldFilePath, 'utf-8');
+
+        filesToRename.push({
+          oldPath: `src/content/${category}/${oldFilename}`,
+          newPath: `src/content/${category}/${newFilename}`,
+          content: Buffer.from(content)
         });
       }
     }
 
-    // In production, commit all files in a single batch commit to GitHub
-    if (!isDev && filesToCommit.length > 0) {
+    // In production, commit all file renames in a single batch commit to GitHub
+    if (!isDev && filesToRename.length > 0) {
       try {
-        await commitFilesToGitHub(filesToCommit, `Reorder ${items.length} items in ${category}`);
+        // For GitHub, we need to delete old files and create new ones (rename = delete + create)
+        const gitHubFiles = filesToRename.map(({ newPath, content }) => ({
+          path: newPath,
+          content
+        }));
+
+        const oldPaths = filesToRename.map(({ oldPath }) => oldPath);
+
+        await commitFilesToGitHub(gitHubFiles, `Reorder ${uniqueItems.length} items in ${category}`, oldPaths);
       } catch (error) {
         console.error('Failed to commit files to GitHub:', error);
         return new Response(JSON.stringify({

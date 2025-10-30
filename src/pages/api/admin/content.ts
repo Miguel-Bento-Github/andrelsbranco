@@ -31,17 +31,8 @@ export const GET: APIRoute = async ({ request, cookies }) => {
     // Fetch collection based on category
     const collection = await getCollection(category as any);
 
-    // Sort by order field, then by date (newest first)
-    const sortedCollection = collection.sort((a, b) => {
-      // First sort by order (lower numbers first, 0 means not ordered)
-      const orderA = a.data.order || 9999;
-      const orderB = b.data.order || 9999;
-      if (orderA !== orderB) {
-        return orderA - orderB;
-      }
-      // Then sort by date (newest first)
-      return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
-    });
+    // Sort by filename (alphabetically)
+    const sortedCollection = collection.sort((a, b) => a.id.localeCompare(b.id));
 
     return new Response(JSON.stringify({ items: sortedCollection }), {
       status: 200,

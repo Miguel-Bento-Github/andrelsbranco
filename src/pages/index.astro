@@ -12,13 +12,8 @@ const allOverview = await getCollection('overview');
 let images;
 
 if (allOverview.length > 0) {
-  // Use overview collection if it has content
-  const sortedOverview = allOverview.sort((a, b) => {
-    if (a.data.order !== b.data.order) {
-      return a.data.order - b.data.order;
-    }
-    return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
-  });
+  // Use overview collection if it has content - sort by filename (alphabetically)
+  const sortedOverview = allOverview.sort((a, b) => a.id.localeCompare(b.id));
 
   images = sortedOverview.map((item) => ({
     id: item.id,

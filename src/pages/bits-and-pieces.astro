@@ -46,8 +46,23 @@ const images = sortedBitsPieces.map((item) => ({
     };
   };
 
+  const prefetchImage = (src: string) => {
+    if (document.querySelector(`link[rel="prefetch"][href="${src}"]`)) {
+      return;
+    }
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.as = 'image';
+    link.href = src;
+    document.head.appendChild(link);
+  };
+
   const bindClicks = (items: Element[], images: { src: string; alt: string }[]) => {
     items.forEach((item, index) => {
+      item.addEventListener('mouseenter', () => {
+        prefetchImage(images[index].src);
+      }, { once: true });
+
       item.addEventListener('click', () => {
         openGallery(images, index);
       });

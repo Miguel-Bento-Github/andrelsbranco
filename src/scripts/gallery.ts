@@ -19,12 +19,12 @@ const createSlide = (img: Image, index: number): string => {
   return `
   <div class="gallery-slide snap-start flex-shrink-0 w-screen h-[100dvh] flex items-center justify-center px-4 py-4" data-index="${index}">
     ${isVideoFile
-      ? `<video controls class="w-full h-full object-contain" playsinline preload="metadata">
+      ? `<video controls class="w-full h-full object-contain" playsinline preload="none">
            <source src="${img.src}" type="video/mp4">
            <source src="${img.src}" type="video/quicktime">
            Your browser does not support the video tag.
          </video>`
-      : `<img src="${img.src}" alt="${img.alt}" class="w-full h-full object-contain" />`
+      : `<img src="${img.src}" alt="${img.alt}" class="w-full h-full object-contain" loading="lazy" />`
     }
   </div>
   `;

@@ -45,8 +45,26 @@ const images = sortedPortraits.map((portrait) => ({
     };
   };
 
+  const prefetchImage = (src: string) => {
+    // Check if already prefetched
+    if (document.querySelector(`link[rel="prefetch"][href="${src}"]`)) {
+      return;
+    }
+
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.as = 'image';
+    link.href = src;
+    document.head.appendChild(link);
+  };
+
   const bindClicks = (items: Element[], images: { src: string; alt: string }[]) => {
     items.forEach((item, index) => {
+      // Prefetch only the current image on hover
+      item.addEventListener('mouseenter', () => {
+        prefetchImage(images[index].src);
+      }, { once: true }); // Only prefetch once per image
+
       item.addEventListener('click', () => {
         openGallery(images, index);
       });

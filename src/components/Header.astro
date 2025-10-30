@@ -8,8 +8,8 @@ const navItems = [
 ];
 ---
 
-<!-- Desktop Menu - Hidden on mobile -->
-<nav class="hidden md:block fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+<!-- Desktop Menu - Hidden on mobile portrait, shown on landscape -->
+<nav class="hidden landscape:block md:block fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
   <div id="desktopNav" class="bg-black/30 backdrop-blur-sm rounded-full px-2 py-2 flex items-center gap-2 text-white">
     <!-- Toggle Button with Icons -->
     <button
@@ -51,10 +51,10 @@ const navItems = [
   </div>
 </nav>
 
-<!-- Mobile Menu Toggle Button (Hamburger/Minus) -->
+<!-- Mobile Menu Toggle Button (Hamburger/Minus) - Only in portrait -->
 <button
   id="hamburger"
-  class="md:hidden fixed bottom-6 right-6 w-12 h-12 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center z-50 text-white"
+  class="portrait:block landscape:hidden md:hidden fixed bottom-6 right-6 w-12 h-12 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center z-50 text-white"
   aria-label="Toggle menu"
 >
   <svg id="hamburgerIcon" class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,16 +65,16 @@ const navItems = [
   </svg>
 </button>
 
-<!-- Mobile Sidebar Overlay -->
+<!-- Mobile Sidebar Overlay - Only in portrait -->
 <div
   id="sidebarOverlay"
-  class="md:hidden fixed inset-0 z-[65] opacity-0 pointer-events-none transition-opacity duration-300"
+  class="portrait:block landscape:hidden md:hidden fixed inset-0 z-[65] opacity-0 pointer-events-none transition-opacity duration-300"
 ></div>
 
-<!-- Mobile Sidebar -->
+<!-- Mobile Sidebar - Only in portrait -->
 <aside
   id="sidebar"
-  class="fixed bottom-20 right-6 w-64 bg-black/60 backdrop-blur-sm z-[70] translate-x-[calc(100%+1.5rem)] transition-transform duration-300 text-white rounded-2xl"
+  class="portrait:block landscape:hidden md:hidden fixed bottom-20 right-6 w-64 bg-black/60 backdrop-blur-sm z-[70] translate-x-[calc(100%+1.5rem)] transition-transform duration-300 text-white rounded-2xl"
 >
   <div class="flex flex-col">
     <!-- Navigation items -->

@@ -6,7 +6,12 @@ import netlify from '@astrojs/netlify';
 // https://astro.build/config
 export default defineConfig({
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    server: {
+      watch: {
+        ignored: ['**/src/content/**']
+      }
+    }
   },
   output: 'server', // Enable SSR for admin auth
   adapter: netlify()

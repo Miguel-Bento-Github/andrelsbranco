@@ -370,9 +370,9 @@ const film = isAuthenticated ? await getCollection('film') : [];
                 successCount++;
               }
 
-              // Small delay between uploads to prevent overwhelming the server
+              // Delay between uploads to let Astro HMR complete (prevents page refresh interrupting uploads)
               if (i < selectedFiles.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 300));
+                await new Promise(resolve => setTimeout(resolve, 2000));
               }
             } catch (err) {
               console.error(`Error uploading ${selectedFiles[i].name}:`, err);
@@ -398,9 +398,6 @@ const film = isAuthenticated ? await getCollection('film') : [];
           renderFileList();
           if (fileInput) fileInput.value = '';
           if (uploadBtn) uploadBtn.disabled = false;
-
-          // Refresh page to show uploaded content
-          setTimeout(() => window.location.reload(), 2000);
 
         } catch (err) {
           progress?.classList.add('hidden');

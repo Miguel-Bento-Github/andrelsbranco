@@ -24,17 +24,11 @@ const images = sortedBitsPieces.map((item) => ({
 }));
 ---
 
-<BaseLayout title="Bits & Pieces - André Branco" description="Detailed photography and moments captured by André Branco">
+<BaseLayout title="Bits & Pieces - André Branco">
   <Header />
 
   <section class="min-h-screen pt-8 pb-20">
     <div class="container mx-auto px-3 md:px-4 max-w-[1920px]">
-      <h1 class="text-4xl md:text-5xl font-light  text-center mb-8 tracking-wide">
-        Bits & Pieces
-      </h1>
-      <p class="text-center  mb-16 max-w-2xl mx-auto">
-        Small details and unexpected moments that tell bigger stories.
-      </p>
       <MasonryGrid images={images} />
     </div>
   </section>

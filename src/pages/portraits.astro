@@ -23,17 +23,11 @@ const images = sortedPortraits.map((portrait) => ({
 }));
 ---
 
-<BaseLayout title="Portraits - André Branco" description="Portrait photography by André Branco">
+<BaseLayout title="Portraits - André Branco">
   <Header />
 
   <section class="min-h-screen pt-8 pb-20">
     <div class="container mx-auto px-3 md:px-4 max-w-[1920px]">
-      <h1 class="text-4xl md:text-5xl font-light  text-center mb-8 tracking-wide">
-        Portraits
-      </h1>
-      <p class="text-center  mb-16 max-w-2xl mx-auto">
-        Capturing the essence and character of people through thoughtful composition and lighting.
-      </p>
       <MasonryGrid images={images} />
     </div>
   </section>

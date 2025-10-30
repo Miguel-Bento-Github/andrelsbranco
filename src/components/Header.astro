@@ -51,44 +51,34 @@ const navItems = [
   </div>
 </nav>
 
-<!-- Mobile Hamburger Button -->
+<!-- Mobile Menu Toggle Button (Hamburger/Minus) -->
 <button
   id="hamburger"
   class="md:hidden fixed bottom-6 right-6 w-12 h-12 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center z-50 text-white"
-  aria-label="Open menu"
+  aria-label="Toggle menu"
 >
-  <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg id="hamburgerIcon" class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+  </svg>
+  <svg id="minusIconMobile" class="w-6 h-6 hidden" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
   </svg>
 </button>
 
-<!-- Mobile Sidebar Overlay - Hidden -->
+<!-- Mobile Sidebar Overlay -->
 <div
   id="sidebarOverlay"
-  class="hidden"
+  class="md:hidden fixed inset-0 z-[65] opacity-0 pointer-events-none transition-opacity duration-300"
 ></div>
 
 <!-- Mobile Sidebar -->
 <aside
   id="sidebar"
-  class="fixed top-0 right-0 h-screen w-64 bg-black/60 backdrop-blur-lg z-[70] translate-x-full transition-transform duration-300 text-white"
+  class="fixed bottom-20 right-6 w-64 bg-black/60 backdrop-blur-sm z-[70] translate-x-[calc(100%+1.5rem)] transition-transform duration-300 text-white rounded-2xl"
 >
-  <div class="flex flex-col h-full">
-    <!-- Close button -->
-    <div class="flex justify-end p-6">
-      <button
-        id="closeSidebar"
-        class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
-        aria-label="Close menu"
-      >
-        <svg class="w-5 h-5" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-
+  <div class="flex flex-col">
     <!-- Navigation items -->
-    <nav class="flex flex-col gap-2 px-6">
+    <nav class="flex flex-col gap-2 p-6">
       {navItems.map((item) => (
         <a
           href={item.href}
@@ -211,32 +201,35 @@ const navItems = [
     isNavExpanded = !isNavExpanded;
   };
 
-  // Small function: open sidebar
-  const openSidebar = () => {
+  // Small function: toggle mobile sidebar
+  let isSidebarOpen = false;
+  const toggleSidebar = () => {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
+    const hamburgerIcon = document.getElementById('hamburgerIcon');
+    const minusIcon = document.getElementById('minusIconMobile');
 
-    if (sidebar && overlay) {
-      sidebar.classList.remove('translate-x-full');
+    if (!sidebar || !overlay || !hamburgerIcon || !minusIcon) return;
+
+    if (isSidebarOpen) {
+      // Close sidebar
+      sidebar.classList.remove('translate-x-0');
+      sidebar.classList.add('translate-x-[calc(100%+1.5rem)]');
+      overlay.classList.remove('opacity-100', 'pointer-events-auto');
+      overlay.classList.add('opacity-0', 'pointer-events-none');
+      hamburgerIcon.classList.remove('hidden');
+      minusIcon.classList.add('hidden');
+    } else {
+      // Open sidebar
+      sidebar.classList.remove('translate-x-[calc(100%+1.5rem)]');
       sidebar.classList.add('translate-x-0');
       overlay.classList.remove('opacity-0', 'pointer-events-none');
       overlay.classList.add('opacity-100', 'pointer-events-auto');
-      document.body.style.overflow = 'hidden';
+      hamburgerIcon.classList.add('hidden');
+      minusIcon.classList.remove('hidden');
     }
-  };
 
-  // Small function: close sidebar
-  const closeSidebar = () => {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-
-    if (sidebar && overlay) {
-      sidebar.classList.remove('translate-x-0');
-      sidebar.classList.add('translate-x-full');
-      overlay.classList.remove('opacity-100', 'pointer-events-auto');
-      overlay.classList.add('opacity-0', 'pointer-events-none');
-      document.body.style.overflow = '';
-    }
+    isSidebarOpen = !isSidebarOpen;
   };
 
   // Small function: init theme based on system preference
@@ -287,13 +280,25 @@ const navItems = [
   // Initialize: bind event listeners
   const initHeader = () => {
     const hamburger = document.getElementById('hamburger');
-    const closeBtn = document.getElementById('closeSidebar');
+    const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
     const navToggle = document.getElementById('navToggle');
 
-    hamburger?.addEventListener('click', openSidebar);
-    closeBtn?.addEventListener('click', closeSidebar);
-    overlay?.addEventListener('click', closeSidebar);
+    // Toggle sidebar when clicking hamburger
+    hamburger?.addEventListener('click', toggleSidebar);
+
+    // Close sidebar when clicking overlay
+    overlay?.addEventListener('click', toggleSidebar);
+
+    // Close sidebar when clicking a nav link
+    sidebar?.querySelectorAll('.nav-link').forEach((link) => {
+      link.addEventListener('click', () => {
+        if (isSidebarOpen) {
+          toggleSidebar();
+        }
+      });
+    });
+
     navToggle?.addEventListener('click', toggleDesktopNav);
 
     initTheme();

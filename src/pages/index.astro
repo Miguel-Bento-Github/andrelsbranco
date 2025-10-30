@@ -17,7 +17,7 @@ if (allOverview.length > 0) {
 
   images = sortedOverview.map((item) => ({
     id: item.id,
-    src: item.data.image,
+    src: item.data.display || item.data.image, // Use display version for gallery, fallback to full-size
     thumbnail: item.data.thumbnail,
     alt: item.data.title,
     width: item.data.width,
@@ -33,7 +33,7 @@ if (allOverview.length > 0) {
   const allFeatured = [
     ...portraits.map(item => ({
       id: item.id,
-      src: item.data.image,
+      src: item.data.display || item.data.image, // Use display version for gallery, fallback to full-size
       thumbnail: item.data.thumbnail,
       alt: item.data.title,
       width: item.data.width,
@@ -42,7 +42,7 @@ if (allOverview.length > 0) {
     })),
     ...bitsPieces.map(item => ({
       id: item.id,
-      src: item.data.image,
+      src: item.data.display || item.data.image, // Use display version for gallery, fallback to full-size
       thumbnail: item.data.thumbnail,
       alt: item.data.title,
       width: item.data.width,
@@ -128,8 +128,16 @@ const displayImages = images.length > 0 ? images : sampleImages;
 <BaseLayout title="André Branco - Photography">
   <Header />
 
+  <!-- Inline script to hide section before images load if opening via URL parameter -->
+  <script is:inline>
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('photo')) {
+      document.write('<style>#gallery-section { display: none !important; }</style>');
+    }
+  </script>
+
   <!-- Gallery Section - starts right away -->
-  <section class="min-h-screen pt-8 pb-20">
+  <section class="min-h-screen pt-8 pb-20" id="gallery-section">
     <div class="container mx-auto px-3 md:px-4 max-w-[1920px]">
       <MasonryGrid images={displayImages} />
     </div>
@@ -149,24 +157,9 @@ const displayImages = images.length > 0 ? images : sampleImages;
     };
   };
 
-  const prefetchImage = (src: string) => {
-    if (document.querySelector(`link[rel="prefetch"][href="${src}"]`)) {
-      return;
-    }
-    const link = document.createElement('link');
-    link.rel = 'prefetch';
-    link.as = 'image';
-    link.href = src;
-    document.head.appendChild(link);
-  };
-
   // Small helper: bind clicks to items
   const bindClicks = (items: Element[], images: { src: string; alt: string }[]) => {
     items.forEach((item, index) => {
-      item.addEventListener('mouseenter', () => {
-        prefetchImage(images[index].src);
-      }, { once: true });
-
       item.addEventListener('click', () => {
         openGallery(images, index);
       });
@@ -175,19 +168,24 @@ const displayImages = images.length > 0 ? images : sampleImages;
 
   // Initialize: setup gallery clicks
   const init = () => {
-    const items = Array.from(document.querySelectorAll('.masonry-item'));
-    const images = items.map(getImageData);
-    bindClicks(items, images);
-
-    // Check for photo parameter in URL
+    // Check for photo parameter in URL first
     const urlParams = new URLSearchParams(window.location.search);
     const photoParam = urlParams.get('photo');
+
+    const items = Array.from(document.querySelectorAll('.masonry-item'));
+    const images = items.map(getImageData);
+
     if (photoParam) {
       const photoIndex = parseInt(photoParam, 10) - 1;
       if (photoIndex >= 0 && photoIndex < images.length) {
+        // Open gallery immediately (section already hidden by inline script)
         openGallery(images, photoIndex);
+        return;
       }
     }
+
+    // Only bind clicks if not opening gallery directly
+    bindClicks(items, images);
   };
 
   // Run on load

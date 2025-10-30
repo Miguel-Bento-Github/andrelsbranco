@@ -1,0 +1,12 @@
+---
+title: "kath_red"
+description: ""
+image: "/uploads/photos/0057-kath_red.webp"
+display: "/uploads/photos/0057-kath_red-display.webp"
+thumbnail: "/uploads/photos/0057-kath_red-thumb.webp"
+width: 4000
+height: 6000
+featured: false
+date: 2025-10-30T08:52:52.460Z
+order: 0
+---

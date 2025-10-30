@@ -235,6 +235,7 @@ async function processFile(file: File, category: string, featured: boolean, file
     if (!isVideo) {
       // Optimize images: convert to WebP with high quality
       const webpFilename = filename.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+      const displayFilename = filename.replace(/\.(jpg|jpeg|png)$/i, '-display.webp');
       const thumbFilename = filename.replace(/\.(jpg|jpeg|png)$/i, '-thumb.webp');
 
       const imageBuffer = Buffer.from(buffer);
@@ -244,12 +245,14 @@ async function processFile(file: File, category: string, featured: boolean, file
       imageHeight = metadata.height || 1080;
 
       const photoContentPath = `/uploads/photos/${webpFilename}`;
+      const displayContentPath = `/uploads/photos/${displayFilename}`;
       const thumbContentPath = `/uploads/photos/${thumbFilename}`;
 
       const markdown = `---
 title: "${file.name.replace(/\.[^/.]+$/, '')}"
 description: ""
 image: "${photoContentPath}"
+display: "${displayContentPath}"
 thumbnail: "${thumbContentPath}"
 width: ${imageWidth}
 height: ${imageHeight}
@@ -265,6 +268,7 @@ order: 0
         const uploadDir = path.join(process.cwd(), 'public/uploads/photos');
         const contentDir = path.join(process.cwd(), `src/content/${category}`);
         const filePath = path.join(uploadDir, webpFilename);
+        const displayPath = path.join(uploadDir, displayFilename);
         const thumbPath = path.join(uploadDir, thumbFilename);
 
         // Generate full-size WebP with quality 100
@@ -272,21 +276,29 @@ order: 0
           .webp({ quality: 100 })
           .toFile(filePath);
 
-        // Generate thumbnail (max 400px width) with quality 90 for fast loading
+        // Generate display version (max 1920px width) with quality 100 for gallery viewing
+        await sharp(imageBuffer)
+          .resize(1920, null, { withoutEnlargement: true })
+          .webp({ quality: 100 })
+          .toFile(displayPath);
+
+        // Generate thumbnail (max 400px width) with quality 100 for fast loading
         await sharp(imageBuffer)
           .resize(400, null, { withoutEnlargement: true })
-          .webp({ quality: 90 })
+          .webp({ quality: 100 })
           .toFile(thumbPath);
 
         await writeFile(path.join(contentDir, mdFilename), markdown);
       } else {
         // Add files to batch commit for production
         const fullImageBuffer = await sharp(imageBuffer).webp({ quality: 100 }).toBuffer();
-        const thumbImageBuffer = await sharp(imageBuffer).resize(400, null, { withoutEnlargement: true }).webp({ quality: 90 }).toBuffer();
+        const displayImageBuffer = await sharp(imageBuffer).resize(1920, null, { withoutEnlargement: true }).webp({ quality: 100 }).toBuffer();
+        const thumbImageBuffer = await sharp(imageBuffer).resize(400, null, { withoutEnlargement: true }).webp({ quality: 100 }).toBuffer();
 
         if (filesToCommit) {
           filesToCommit.push(
             { path: `public/uploads/photos/${webpFilename}`, content: fullImageBuffer },
+            { path: `public/uploads/photos/${displayFilename}`, content: displayImageBuffer },
             { path: `public/uploads/photos/${thumbFilename}`, content: thumbImageBuffer },
             { path: `src/content/${category}/${mdFilename}`, content: Buffer.from(markdown) }
           );

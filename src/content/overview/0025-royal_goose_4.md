@@ -1,0 +1,12 @@
+---
+title: "royal goose_4"
+description: ""
+image: "/uploads/photos/1761814587799-royal_goose_4.webp"
+display: "/uploads/photos/1761814587799-royal_goose_4-display.webp"
+thumbnail: "/uploads/photos/1761814587799-royal_goose_4-thumb.webp"
+width: 6000
+height: 4000
+featured: true
+date: 2025-10-30T08:56:27.806Z
+order: 1
+---

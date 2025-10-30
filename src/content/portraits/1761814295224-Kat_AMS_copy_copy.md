@@ -2,6 +2,7 @@
 title: "Kat_AMS copy copy"
 description: ""
 image: "/uploads/photos/1761814295224-Kat_AMS_copy_copy.webp"
+display: "/uploads/photos/1761814295224-Kat_AMS_copy_copy-display.webp"
 thumbnail: "/uploads/photos/1761814295224-Kat_AMS_copy_copy-thumb.webp"
 width: 6000
 height: 4000

@@ -1,0 +1,12 @@
+---
+title: "airplane"
+description: ""
+image: "/uploads/photos/0025-airplane.webp"
+display: "/uploads/photos/0025-airplane-display.webp"
+thumbnail: "/uploads/photos/0025-airplane-thumb.webp"
+width: 6000
+height: 4000
+featured: false
+date: 2025-10-30T08:47:28.457Z
+order: 0
+---

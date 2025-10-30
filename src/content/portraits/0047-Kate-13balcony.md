@@ -1,0 +1,12 @@
+---
+title: "Kate-13balcony"
+description: ""
+image: "/uploads/photos/0047-Kate-13balcony.webp"
+display: "/uploads/photos/0047-Kate-13balcony-display.webp"
+thumbnail: "/uploads/photos/0047-Kate-13balcony-thumb.webp"
+width: 7360
+height: 4912
+featured: false
+date: 2025-10-30T08:51:48.815Z
+order: 0
+---

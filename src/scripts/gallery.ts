@@ -261,6 +261,7 @@ export function openGallery(images: Image[], startIndex = 0) {
 
   // Load initial slides
   loadSlidesInRange(container, images, startIndex);
+  console.log(`Gallery opened: loaded ${container.querySelectorAll('.gallery-slide').length} slides for image ${startIndex + 1} of ${images.length}`);
 
   // Prefetch next image
   const nextImageIndex = (startIndex + 1) % images.length;

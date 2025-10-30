@@ -14,8 +14,8 @@ const octokit = new Octokit({
   auth: import.meta.env.GITHUB_TOKEN
 });
 
-// Helper to commit file to GitHub
-async function commitToGitHub(filePath: string, content: Buffer, message: string) {
+// Helper to commit multiple files to GitHub in a single commit
+async function commitFilesToGitHub(files: Array<{ path: string; content: Buffer }>, message: string) {
   if (isDev) return; // Skip in development
 
   const owner = import.meta.env.GITHUB_OWNER;
@@ -28,34 +28,66 @@ async function commitToGitHub(filePath: string, content: Buffer, message: string
   }
 
   try {
-    // Get current file SHA if it exists
-    let sha: string | undefined;
-    try {
-      const { data } = await octokit.repos.getContent({
-        owner,
-        repo,
-        path: filePath,
-        ref: branch
-      });
-      if ('sha' in data) {
-        sha = data.sha;
-      }
-    } catch (error) {
-      // File doesn't exist yet, that's ok
-    }
-
-    // Create or update file
-    await octokit.repos.createOrUpdateFileContents({
+    // Get the current commit SHA
+    const { data: refData } = await octokit.git.getRef({
       owner,
       repo,
-      path: filePath,
+      ref: `heads/${branch}`
+    });
+    const currentCommitSha = refData.object.sha;
+
+    // Get the tree SHA from the current commit
+    const { data: commitData } = await octokit.git.getCommit({
+      owner,
+      repo,
+      commit_sha: currentCommitSha
+    });
+    const baseTreeSha = commitData.tree.sha;
+
+    // Create blobs for all files
+    const blobPromises = files.map(async (file) => {
+      const { data: blobData } = await octokit.git.createBlob({
+        owner,
+        repo,
+        content: file.content.toString('base64'),
+        encoding: 'base64'
+      });
+      return {
+        path: file.path,
+        mode: '100644' as const,
+        type: 'blob' as const,
+        sha: blobData.sha
+      };
+    });
+
+    const tree = await Promise.all(blobPromises);
+
+    // Create a new tree with all the files
+    const { data: newTree } = await octokit.git.createTree({
+      owner,
+      repo,
+      base_tree: baseTreeSha,
+      tree
+    });
+
+    // Create a new commit
+    const { data: newCommit } = await octokit.git.createCommit({
+      owner,
+      repo,
       message,
-      content: content.toString('base64'),
-      branch,
-      ...(sha && { sha })
+      tree: newTree.sha,
+      parents: [currentCommitSha]
+    });
+
+    // Update the branch to point to the new commit
+    await octokit.git.updateRef({
+      owner,
+      repo,
+      ref: `heads/${branch}`,
+      sha: newCommit.sha
     });
   } catch (error) {
-    console.error(`Failed to commit ${filePath}:`, error);
+    console.error('Failed to commit files to GitHub:', error);
     throw error;
   }
 }
@@ -88,30 +120,41 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return new Response('No files provided', { status: 400 });
     }
 
-    // Process files sequentially with minimal delay to avoid Astro data-store race condition
+    // Process all files and collect their data
     const results = [];
+    const filesToCommit: Array<{ path: string; content: Buffer }> = [];
 
-    for (let i = 0; i < files.length; i++) {
+    for (const file of files) {
       try {
-        const result = await processFile(files[i], category, featured);
+        const result = await processFile(file, category, featured, filesToCommit);
         results.push(result);
-
-        // Minimal delay to let Astro's watcher catch up (reduced from 500ms to 200ms)
-        if (i < files.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 200));
-        }
       } catch (error) {
-        console.error(`Error processing ${files[i].name}:`, error);
+        console.error(`Error processing ${file.name}:`, error);
         results.push({
           success: false,
-          file: files[i].name,
+          file: file.name,
           error: error instanceof Error ? error.message : 'Unknown error'
         });
       }
     }
 
-    // Trigger Netlify rebuild if webhook is configured (only in production)
-    if (!isDev) {
+    // In production, commit all files in a single batch commit to GitHub
+    if (!isDev && filesToCommit.length > 0) {
+      try {
+        const fileNames = results.filter(r => r.success).map(r => r.file).join(', ');
+        await commitFilesToGitHub(filesToCommit, `Add ${files.length} file(s): ${fileNames}`);
+      } catch (error) {
+        console.error('Failed to commit files to GitHub:', error);
+        return new Response(JSON.stringify({
+          error: 'GitHub commit failed',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Trigger Netlify rebuild if webhook is configured
       const buildHook = import.meta.env.NETLIFY_BUILD_HOOK;
       if (buildHook) {
         try {
@@ -146,7 +189,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   }
 };
 
-async function processFile(file: File, category: string, featured: boolean) {
+async function processFile(file: File, category: string, featured: boolean, filesToCommit?: Array<{ path: string; content: Buffer }>) {
     if (!file) {
       throw new Error('No file provided');
     }
@@ -217,7 +260,7 @@ order: 0
 
       const mdFilename = `${timestamp}-${safeName.replace(/\.[^/.]+$/, '')}.md`;
 
-      // Write locally (for dev) or commit to GitHub (for prod)
+      // Write locally (for dev) or add to batch commit (for prod)
       if (isDev) {
         const uploadDir = path.join(process.cwd(), 'public/uploads/photos');
         const contentDir = path.join(process.cwd(), `src/content/${category}`);
@@ -237,14 +280,17 @@ order: 0
 
         await writeFile(path.join(contentDir, mdFilename), markdown);
       } else {
-        // Commit to GitHub in production
+        // Add files to batch commit for production
         const fullImageBuffer = await sharp(imageBuffer).webp({ quality: 95 }).toBuffer();
         const thumbImageBuffer = await sharp(imageBuffer).resize(800, null, { withoutEnlargement: true }).webp({ quality: 85 }).toBuffer();
 
-        // Commit sequentially to avoid race condition with SHA checks
-        await commitToGitHub(`public/uploads/photos/${webpFilename}`, fullImageBuffer, `Add ${webpFilename}`);
-        await commitToGitHub(`public/uploads/photos/${thumbFilename}`, thumbImageBuffer, `Add thumbnail ${thumbFilename}`);
-        await commitToGitHub(`src/content/${category}/${mdFilename}`, Buffer.from(markdown), `Add ${file.name}`);
+        if (filesToCommit) {
+          filesToCommit.push(
+            { path: `public/uploads/photos/${webpFilename}`, content: fullImageBuffer },
+            { path: `public/uploads/photos/${thumbFilename}`, content: thumbImageBuffer },
+            { path: `src/content/${category}/${mdFilename}`, content: Buffer.from(markdown) }
+          );
+        }
       }
 
       return {
@@ -275,7 +321,7 @@ order: 0
 
       const mdFilename = `${timestamp}-${safeName.replace(/\.[^/.]+$/, '')}.md`;
 
-      // Write locally (for dev) or commit to GitHub (for prod)
+      // Write locally (for dev) or add to batch commit (for prod)
       if (isDev) {
         const uploadDir = path.join(process.cwd(), 'public/uploads/videos');
         const contentDir = path.join(process.cwd(), `src/content/${category}`);
@@ -299,20 +345,19 @@ order: 0
 
         await writeFile(path.join(contentDir, mdFilename), markdown);
       } else {
-        // Commit to GitHub in production
-        // For production, we need to generate thumbnail from buffer in memory
-        // This is more complex for videos, so for now we'll use a placeholder approach
-        // In a full implementation, you'd want to use a service like AWS Lambda with ffmpeg layers
+        // Add files to batch commit for production
         const videoBuffer = Buffer.from(buffer);
 
         // Create a simple placeholder thumbnail (you may want to improve this)
         const placeholderThumb = Buffer.from('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 
-        await Promise.all([
-          commitToGitHub(`public/uploads/videos/${filename}`, videoBuffer, `Add video ${filename}`),
-          commitToGitHub(`public/uploads/photos/${thumbnailFilename}`, placeholderThumb, `Add thumbnail ${thumbnailFilename}`),
-          commitToGitHub(`src/content/${category}/${mdFilename}`, Buffer.from(markdown), `Add ${file.name}`)
-        ]);
+        if (filesToCommit) {
+          filesToCommit.push(
+            { path: `public/uploads/videos/${filename}`, content: videoBuffer },
+            { path: `public/uploads/photos/${thumbnailFilename}`, content: placeholderThumb },
+            { path: `src/content/${category}/${mdFilename}`, content: Buffer.from(markdown) }
+          );
+        }
       }
     }
 

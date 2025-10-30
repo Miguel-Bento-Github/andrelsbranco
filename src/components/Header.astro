@@ -54,14 +54,11 @@ const navItems = [
 <!-- Mobile Menu Toggle Button (Hamburger/Minus) - Only in portrait -->
 <button
   id="hamburger"
-  class="portrait:block landscape:hidden md:hidden fixed bottom-6 right-6 w-12 h-12 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center z-50 text-white"
+  class="portrait:flex landscape:hidden md:hidden fixed bottom-6 right-6 w-12 h-12 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center z-50 text-white"
   aria-label="Toggle menu"
 >
-  <svg id="hamburgerIcon" class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-  </svg>
-  <svg id="minusIconMobile" class="w-6 h-6 hidden" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+  <svg id="mobileMenuIcon" class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path id="menuPath" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
   </svg>
 </button>
 
@@ -206,27 +203,36 @@ const navItems = [
   const toggleSidebar = () => {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
-    const hamburgerIcon = document.getElementById('hamburgerIcon');
-    const minusIcon = document.getElementById('minusIconMobile');
+    const menuPath = document.getElementById('menuPath');
 
-    if (!sidebar || !overlay || !hamburgerIcon || !minusIcon) return;
+    if (!sidebar || !overlay || !menuPath) return;
 
     if (isSidebarOpen) {
-      // Close sidebar
+      // Close sidebar - morph back to hamburger
       sidebar.classList.remove('translate-x-0');
       sidebar.classList.add('translate-x-[calc(100%+1.5rem)]');
       overlay.classList.remove('opacity-100', 'pointer-events-auto');
       overlay.classList.add('opacity-0', 'pointer-events-none');
-      hamburgerIcon.classList.remove('hidden');
-      minusIcon.classList.add('hidden');
+
+      // Morph minus back to hamburger
+      animate(menuPath, {
+        d: 'M4 6h16M4 12h16M4 18h16',
+        duration: 300,
+        ease: 'out(3)'
+      });
     } else {
-      // Open sidebar
+      // Open sidebar - morph to minus
       sidebar.classList.remove('translate-x-[calc(100%+1.5rem)]');
       sidebar.classList.add('translate-x-0');
       overlay.classList.remove('opacity-0', 'pointer-events-none');
       overlay.classList.add('opacity-100', 'pointer-events-auto');
-      hamburgerIcon.classList.add('hidden');
-      minusIcon.classList.remove('hidden');
+
+      // Morph hamburger to minus (all three lines to middle)
+      animate(menuPath, {
+        d: 'M4 12h16M4 12h16M4 12h16',
+        duration: 300,
+        ease: 'out(3)'
+      });
     }
 
     isSidebarOpen = !isSidebarOpen;

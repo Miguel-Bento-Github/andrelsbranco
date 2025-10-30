@@ -8,8 +8,8 @@ const octokit = new Octokit({
   auth: import.meta.env.GITHUB_TOKEN
 });
 
-// Helper to delete file from GitHub
-async function deleteFromGitHub(filePath: string, message: string) {
+// Helper to delete multiple files from GitHub in a single commit
+async function deleteFilesFromGitHub(filePaths: string[], message: string) {
   if (isDev) return; // Skip in development
 
   const owner = import.meta.env.GITHUB_OWNER;
@@ -22,27 +22,65 @@ async function deleteFromGitHub(filePath: string, message: string) {
   }
 
   try {
-    // Get file SHA (required for deletion)
-    const { data } = await octokit.repos.getContent({
+    // Get the current commit SHA
+    const { data: refData } = await octokit.git.getRef({
       owner,
       repo,
-      path: filePath,
-      ref: branch
+      ref: `heads/${branch}`
+    });
+    const currentCommitSha = refData.object.sha;
+
+    // Get the current tree
+    const { data: commitData } = await octokit.git.getCommit({
+      owner,
+      repo,
+      commit_sha: currentCommitSha
+    });
+    const currentTreeSha = commitData.tree.sha;
+
+    // Get the full tree
+    const { data: treeData } = await octokit.git.getTree({
+      owner,
+      repo,
+      tree_sha: currentTreeSha,
+      recursive: 'true'
     });
 
-    if ('sha' in data) {
-      // Delete the file
-      await octokit.repos.deleteFile({
-        owner,
-        repo,
-        path: filePath,
-        message,
-        sha: data.sha,
-        branch
-      });
-    }
+    // Filter out the files we want to delete
+    const newTree = treeData.tree
+      .filter(item => !filePaths.includes(item.path || ''))
+      .map(item => ({
+        path: item.path!,
+        mode: item.mode as '100644' | '100755' | '040000' | '160000' | '120000',
+        type: item.type as 'blob' | 'tree' | 'commit',
+        sha: item.sha!
+      }));
+
+    // Create a new tree without the deleted files
+    const { data: newTreeData } = await octokit.git.createTree({
+      owner,
+      repo,
+      tree: newTree
+    });
+
+    // Create a new commit
+    const { data: newCommit } = await octokit.git.createCommit({
+      owner,
+      repo,
+      message,
+      tree: newTreeData.sha,
+      parents: [currentCommitSha]
+    });
+
+    // Update the branch to point to the new commit
+    await octokit.git.updateRef({
+      owner,
+      repo,
+      ref: `heads/${branch}`,
+      sha: newCommit.sha
+    });
   } catch (error) {
-    console.error(`Failed to delete ${filePath} from GitHub:`, error);
+    console.error('Failed to delete files from GitHub:', error);
     throw error;
   }
 }
@@ -95,20 +133,16 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     } else {
       // Production: Delete from GitHub
       const filesToDelete = [
-        { path: `src/content/${category}/${id}`, name: 'content file' },
-        { path: `public${filePath}`, name: 'media file' }
+        `src/content/${category}/${id}`,
+        `public${filePath}`
       ];
 
       if (thumbnailPath) {
-        filesToDelete.push({ path: `public${thumbnailPath}`, name: 'thumbnail' });
+        filesToDelete.push(`public${thumbnailPath}`);
       }
 
-      // Delete all files from GitHub
-      await Promise.all(
-        filesToDelete.map(file =>
-          deleteFromGitHub(file.path, `Delete ${file.name} ${id}`)
-        )
-      );
+      // Delete all files from GitHub in a single commit
+      await deleteFilesFromGitHub(filesToDelete, `Delete ${id} and associated files`);
 
       // Trigger Netlify rebuild if webhook is configured
       const buildHook = import.meta.env.NETLIFY_BUILD_HOOK;

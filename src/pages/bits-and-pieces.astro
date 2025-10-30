@@ -10,13 +10,8 @@ import { getCollection } from 'astro:content';
 
 const allBitsPieces = await getCollection('bits-pieces');
 
-// Sort by order (if specified) then by date
-const sortedBitsPieces = allBitsPieces.sort((a, b) => {
-  if (a.data.order !== b.data.order) {
-    return a.data.order - b.data.order;
-  }
-  return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
-});
+// Sort by filename (alphabetically)
+const sortedBitsPieces = allBitsPieces.sort((a, b) => a.id.localeCompare(b.id));
 
 // Map to image format expected by MasonryGrid
 const images = sortedBitsPieces.map((item) => ({

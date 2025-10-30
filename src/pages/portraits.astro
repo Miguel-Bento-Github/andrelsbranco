@@ -9,13 +9,8 @@ import MasonryGrid from '../components/MasonryGrid.astro';
 // Fetch portraits from content collection
 const allPortraits = await getCollection('portraits');
 
-// Sort by order (if specified) then by date
-const sortedPortraits = allPortraits.sort((a, b) => {
-  if (a.data.order !== b.data.order) {
-    return a.data.order - b.data.order;
-  }
-  return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
-});
+// Sort by filename (alphabetically)
+const sortedPortraits = allPortraits.sort((a, b) => a.id.localeCompare(b.id));
 
 // Map to image format expected by MasonryGrid
 const images = sortedPortraits.map((portrait) => ({

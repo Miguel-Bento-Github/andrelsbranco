@@ -38,3 +38,6 @@ src/content/*/
 !src/content/config.ts
 public/uploads/
 !public/uploads/**/.gitkeep
+
+# Utility scripts
+rename-files.mjs

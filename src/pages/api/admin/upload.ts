@@ -120,41 +120,51 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return new Response('No files provided', { status: 400 });
     }
 
-    // Process all files and collect their data
+    // Process files in batches to avoid timeout (max 10 images per batch = 30 files)
+    const BATCH_SIZE = 10;
     const results = [];
-    const filesToCommit: Array<{ path: string; content: Buffer }> = [];
 
-    for (const file of files) {
-      try {
-        const result = await processFile(file, category, featured, filesToCommit);
-        results.push(result);
-      } catch (error) {
-        console.error(`Error processing ${file.name}:`, error);
-        results.push({
-          success: false,
-          file: file.name,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
+    for (let i = 0; i < files.length; i += BATCH_SIZE) {
+      const batch = files.slice(i, i + BATCH_SIZE);
+      const filesToCommit: Array<{ path: string; content: Buffer }> = [];
+
+      // Process files in this batch
+      for (const file of batch) {
+        try {
+          const result = await processFile(file, category, featured, filesToCommit);
+          results.push(result);
+        } catch (error) {
+          console.error(`Error processing ${file.name}:`, error);
+          results.push({
+            success: false,
+            file: file.name,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      // In production, commit this batch to GitHub
+      if (!isDev && filesToCommit.length > 0) {
+        try {
+          const batchResults = results.slice(i, i + batch.length).filter(r => r.success);
+          const fileNames = batchResults.map(r => r.file).join(', ');
+          await commitFilesToGitHub(filesToCommit, `Add ${batch.length} file(s): ${fileNames}`);
+        } catch (error) {
+          console.error('Failed to commit batch to GitHub:', error);
+          return new Response(JSON.stringify({
+            error: 'GitHub commit failed',
+            message: error instanceof Error ? error.message : 'Unknown error',
+            processedCount: results.length
+          }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
       }
     }
 
-    // In production, commit all files in a single batch commit to GitHub
-    if (!isDev && filesToCommit.length > 0) {
-      try {
-        const fileNames = results.filter(r => r.success).map(r => r.file).join(', ');
-        await commitFilesToGitHub(filesToCommit, `Add ${files.length} file(s): ${fileNames}`);
-      } catch (error) {
-        console.error('Failed to commit files to GitHub:', error);
-        return new Response(JSON.stringify({
-          error: 'GitHub commit failed',
-          message: error instanceof Error ? error.message : 'Unknown error'
-        }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-
-      // Trigger Netlify rebuild if webhook is configured
+    // Trigger Netlify rebuild once after all batches (only in production)
+    if (!isDev) {
       const buildHook = import.meta.env.NETLIFY_BUILD_HOOK;
       if (buildHook) {
         try {

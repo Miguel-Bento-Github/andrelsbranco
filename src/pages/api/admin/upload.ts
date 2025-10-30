@@ -241,11 +241,10 @@ order: 0
         const fullImageBuffer = await sharp(imageBuffer).webp({ quality: 95 }).toBuffer();
         const thumbImageBuffer = await sharp(imageBuffer).resize(800, null, { withoutEnlargement: true }).webp({ quality: 85 }).toBuffer();
 
-        await Promise.all([
-          commitToGitHub(`public/uploads/photos/${webpFilename}`, fullImageBuffer, `Add ${webpFilename}`),
-          commitToGitHub(`public/uploads/photos/${thumbFilename}`, thumbImageBuffer, `Add thumbnail ${thumbFilename}`),
-          commitToGitHub(`src/content/${category}/${mdFilename}`, Buffer.from(markdown), `Add ${file.name}`)
-        ]);
+        // Commit sequentially to avoid race condition with SHA checks
+        await commitToGitHub(`public/uploads/photos/${webpFilename}`, fullImageBuffer, `Add ${webpFilename}`);
+        await commitToGitHub(`public/uploads/photos/${thumbFilename}`, thumbImageBuffer, `Add thumbnail ${thumbFilename}`);
+        await commitToGitHub(`src/content/${category}/${mdFilename}`, Buffer.from(markdown), `Add ${file.name}`);
       }
 
       return {

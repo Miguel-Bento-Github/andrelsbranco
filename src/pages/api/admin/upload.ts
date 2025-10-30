@@ -267,9 +267,9 @@ order: 0
         const filePath = path.join(uploadDir, webpFilename);
         const thumbPath = path.join(uploadDir, thumbFilename);
 
-        // Generate full-size WebP with quality 95
+        // Generate full-size WebP with quality 100
         await sharp(imageBuffer)
-          .webp({ quality: 95 })
+          .webp({ quality: 100 })
           .toFile(filePath);
 
         // Generate thumbnail (max 800px width) with quality 85 for fast loading
@@ -281,7 +281,7 @@ order: 0
         await writeFile(path.join(contentDir, mdFilename), markdown);
       } else {
         // Add files to batch commit for production
-        const fullImageBuffer = await sharp(imageBuffer).webp({ quality: 95 }).toBuffer();
+        const fullImageBuffer = await sharp(imageBuffer).webp({ quality: 100 }).toBuffer();
         const thumbImageBuffer = await sharp(imageBuffer).resize(800, null, { withoutEnlargement: true }).webp({ quality: 85 }).toBuffer();
 
         if (filesToCommit) {

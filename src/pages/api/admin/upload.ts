@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { existsSync } from 'fs';
+// @ts-ignore - fluent-ffmpeg lacks TypeScript definitions
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import sharp from 'sharp';
@@ -203,6 +204,7 @@ async function processFile(file: File, category: string, featured: boolean, file
     const timestamp = Date.now();
     const safeName = file.name.replace(/[^a-z0-9.-]/gi, '_');
     const filename = `${timestamp}-${safeName}`;
+    const mdFilename = `${timestamp}-${safeName.replace(/\.[^/.]+$/, '')}.md`;
 
     const buffer = await file.arrayBuffer();
     let imageWidth = 1920;
@@ -260,8 +262,6 @@ featured: ${featured}
 date: ${new Date().toISOString()}
 order: 0
 ---`;
-
-      const mdFilename = `${timestamp}-${safeName.replace(/\.[^/.]+$/, '')}.md`;
 
       // Write locally (for dev) or add to batch commit (for prod)
       if (isDev) {
@@ -331,8 +331,6 @@ date: ${new Date().toISOString()}
 order: 0
 ---`;
 
-      const mdFilename = `${timestamp}-${safeName.replace(/\.[^/.]+$/, '')}.md`;
-
       // Write locally (for dev) or add to batch commit (for prod)
       if (isDev) {
         const uploadDir = path.join(process.cwd(), 'public/uploads/videos');
@@ -352,7 +350,7 @@ order: 0
               size: '1920x1080'
             })
             .on('end', () => resolve())
-            .on('error', (err) => reject(err));
+            .on('error', (err: Error) => reject(err));
         });
 
         await writeFile(path.join(contentDir, mdFilename), markdown);

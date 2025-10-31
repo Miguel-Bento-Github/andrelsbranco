@@ -32,7 +32,7 @@ export const GET: APIRoute = async ({ request, cookies }) => {
     const collection = await getCollection(category as any);
 
     // Sort by filename (alphabetically)
-    const sortedCollection = collection.sort((a, b) => a.id.localeCompare(b.id));
+    const sortedCollection = collection.sort((a: any, b: any) => a.id.localeCompare(b.id));
 
     return new Response(JSON.stringify({ items: sortedCollection }), {
       status: 200,

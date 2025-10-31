@@ -92,16 +92,34 @@ const fadeOut = (el: HTMLElement, callback: () => void) => {
   });
 };
 
-// Small helper: prefetch image
+// Extend window interface for prefetch tracking
+declare global {
+  interface Window {
+    __prefetchedImages?: Set<string>;
+  }
+}
+
+// Small helper: prefetch image by actually loading it
 const prefetchImage = (src: string) => {
-  if (document.querySelector(`link[rel="prefetch"][href="${src}"]`)) {
+  // Check if already prefetched
+  if (window.__prefetchedImages?.has(src)) {
+    console.log('Already prefetched:', src);
     return;
   }
-  const link = document.createElement('link');
-  link.rel = 'prefetch';
-  link.as = 'image';
-  link.href = src;
-  document.head.appendChild(link);
+
+  console.log('Prefetching next image:', src);
+
+  // Create hidden image to force browser to load it
+  const img = new Image();
+  img.src = src;
+
+  // Track prefetched images
+  if (!window.__prefetchedImages) {
+    window.__prefetchedImages = new Set();
+  }
+  window.__prefetchedImages.add(src);
+
+  console.log('Image preload started');
 };
 
 // Small helper: ensure slide exists at index

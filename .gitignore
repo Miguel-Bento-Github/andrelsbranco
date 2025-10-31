@@ -39,5 +39,5 @@ src/content/*/
 public/uploads/
 !public/uploads/**/.gitkeep
 
-# Utility scripts
-scripts/
+# Utility scripts (root level only)
+/scripts/

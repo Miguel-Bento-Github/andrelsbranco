@@ -103,11 +103,8 @@ declare global {
 const prefetchImage = (src: string) => {
   // Check if already prefetched
   if (window.__prefetchedImages?.has(src)) {
-    console.log('Already prefetched:', src);
     return;
   }
-
-  console.log('Prefetching next image:', src);
 
   // Create hidden image to force browser to load it
   const img = new Image();
@@ -118,8 +115,6 @@ const prefetchImage = (src: string) => {
     window.__prefetchedImages = new Set();
   }
   window.__prefetchedImages.add(src);
-
-  console.log('Image preload started');
 };
 
 // Small helper: ensure slide exists at index
@@ -296,7 +291,6 @@ export function openGallery(images: Image[], startIndex = 0) {
 
   // Load initial slides
   loadSlidesInRange(container, images, startIndex);
-  console.log(`Gallery opened: loaded ${container.querySelectorAll('.gallery-slide').length} slides for image ${startIndex + 1} of ${images.length}`);
 
   // Prefetch next image
   const nextImageIndex = (startIndex + 1) % images.length;

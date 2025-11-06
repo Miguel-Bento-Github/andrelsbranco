@@ -18,13 +18,16 @@ const photoSchema = z.object({
 const videoSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
-  video: z.string(),
+  video: z.string().optional(), // Local video path
+  vimeoId: z.string().optional(), // Vimeo video ID
   thumbnail: z.string(),
   thumbnailWidth: z.number(),
   thumbnailHeight: z.number(),
   featured: z.boolean().default(false),
   date: z.coerce.date(),
   order: z.number().default(0)
+}).refine((data) => data.video || data.vimeoId, {
+  message: "Either video or vimeoId must be provided"
 });
 
 // Define collections

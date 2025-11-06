@@ -18,6 +18,7 @@ const images = sortedFilm.map((item) => ({
   id: item.id,
   src: item.data.thumbnail,
   videoSrc: item.data.video,
+  vimeoId: item.data.vimeoId,
   alt: item.data.title,
   width: item.data.thumbnailWidth,
   height: item.data.thumbnailHeight
@@ -48,11 +49,13 @@ const images = sortedFilm.map((item) => ({
   const getImageData = (item: Element) => {
     const img = item.querySelector('img');
     const videoSrc = item.getAttribute('data-video-src');
+    const vimeoId = item.getAttribute('data-vimeo-id');
     const originalSrc = (item as HTMLElement).dataset.originalSrc;
     return {
       src: videoSrc || img?.src || '',
       original: originalSrc || videoSrc || img?.src || '',
-      alt: img?.alt || ''
+      alt: img?.alt || '',
+      vimeoId: vimeoId || undefined
     };
   };
 

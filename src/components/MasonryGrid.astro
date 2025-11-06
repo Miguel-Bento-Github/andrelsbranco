@@ -8,6 +8,7 @@ interface Props {
     original?: string;
     thumbnail?: string;
     videoSrc?: string;
+    vimeoId?: string;
     alt: string;
     width?: number;
     height?: number;
@@ -23,6 +24,7 @@ const { images } = Astro.props;
       class="masonry-item opacity-0 cursor-pointer relative"
       data-id={img.id}
       data-video-src={img.videoSrc}
+      data-vimeo-id={img.vimeoId}
       data-full-src={img.src}
       data-original-src={img.original || img.src}
     >

@@ -5,6 +5,7 @@ interface Image {
   src: string;
   original?: string;
   alt: string;
+  vimeoId?: string;
 }
 
 // Small helper: check if source is video
@@ -16,10 +17,22 @@ const isVideo = (src: string): boolean => {
 // Small helper: create slide HTML
 const createSlide = (img: Image, index: number): string => {
   const isVideoFile = isVideo(img.src);
+  const isVimeoVideo = !!img.vimeoId;
 
   return `
   <div class="gallery-slide snap-start flex-shrink-0 w-screen h-[100dvh] flex items-center justify-center px-4 py-4" data-index="${index}">
-    ${isVideoFile
+    ${isVimeoVideo
+      ? `<div style="padding:56.25% 0 0 0;position:relative;width:100%;max-width:1920px;">
+           <iframe
+             src="https://player.vimeo.com/video/${img.vimeoId}?badge=0&autopause=0&player_id=0&app_id=58479"
+             frameborder="0"
+             allow="autoplay; fullscreen; picture-in-picture; clipboard-write"
+             style="position:absolute;top:0;left:0;width:100%;height:100%;"
+             title="${img.alt}">
+           </iframe>
+         </div>
+         <script src="https://player.vimeo.com/api/player.js"><\/script>`
+      : isVideoFile
       ? `<video controls class="w-full h-full object-contain" playsinline preload="none">
            <source src="${img.src}" type="video/mp4">
            <source src="${img.src}" type="video/quicktime">

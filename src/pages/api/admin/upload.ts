@@ -116,6 +116,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const files = formData.getAll('files') as File[];
     const category = formData.get('category') as string;
     const featured = formData.get('featured') === 'true';
+    const vimeoUrl = formData.get('vimeoUrl') as string | null;
 
     if (!files || files.length === 0) {
       return new Response('No files provided', { status: 400 });
@@ -127,7 +128,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     for (const file of files) {
       try {
-        const result = await processFile(file, category, featured, filesToCommit);
+        const result = await processFile(file, category, featured, filesToCommit, vimeoUrl);
         results.push(result);
       } catch (error) {
         console.error(`Error processing ${file.name}:`, error);
@@ -190,17 +191,35 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   }
 };
 
-async function processFile(file: File, category: string, featured: boolean, filesToCommit?: Array<{ path: string; content: Buffer }>) {
+// Helper function to extract Vimeo ID from URL
+function extractVimeoId(url: string): string | null {
+  const patterns = [
+    /vimeo\.com\/(\d+)/,
+    /vimeo\.com\/video\/(\d+)/,
+    /player\.vimeo\.com\/video\/(\d+)/
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+
+  return null;
+}
+
+async function processFile(file: File, category: string, featured: boolean, filesToCommit?: Array<{ path: string; content: Buffer }>, vimeoUrl?: string | null) {
     if (!file) {
       throw new Error('No file provided');
     }
 
     const isVideo = file.type.startsWith('video/');
+    const isVimeoVideo = !!vimeoUrl && category === 'film';
 
     // Videos can only be uploaded to film category
     if (isVideo && category !== 'film') {
       throw new Error('Videos can only be uploaded to the Film category');
     }
+
     const timestamp = Date.now();
     const safeName = file.name.replace(/[^a-z0-9.-]/gi, '_');
     const filename = `${timestamp}-${safeName}`;
@@ -234,7 +253,66 @@ async function processFile(file: File, category: string, featured: boolean, file
       }
     }
 
-    if (!isVideo) {
+    if (isVimeoVideo) {
+      // Handle Vimeo video with thumbnail
+      const vimeoId = extractVimeoId(vimeoUrl!);
+      if (!vimeoId) {
+        throw new Error('Invalid Vimeo URL');
+      }
+
+      // Process thumbnail image
+      const imageBuffer = Buffer.from(buffer);
+      const image = sharp(imageBuffer);
+      const metadata = await image.metadata();
+      imageWidth = metadata.width || 1920;
+      imageHeight = metadata.height || 1080;
+
+      const thumbFilename = filename.replace(/\.[^/.]+$/, '-thumb.webp');
+      const thumbContentPath = `/uploads/photos/${thumbFilename}`;
+
+      const markdown = `---
+title: "${file.name.replace(/\.[^/.]+$/, '')}"
+description: ""
+vimeoId: "${vimeoId}"
+thumbnail: "${thumbContentPath}"
+thumbnailWidth: ${imageWidth}
+thumbnailHeight: ${imageHeight}
+featured: ${featured}
+date: ${new Date().toISOString()}
+order: 0
+---`;
+
+      // Write locally (for dev) or add to batch commit (for prod)
+      if (isDev) {
+        const uploadDir = path.join(process.cwd(), 'public/uploads/photos');
+        const contentDir = path.join(process.cwd(), `src/content/${category}`);
+        const thumbPath = path.join(uploadDir, thumbFilename);
+
+        // Generate thumbnail from uploaded image
+        await sharp(imageBuffer)
+          .resize(1920, null, { withoutEnlargement: true })
+          .webp({ quality: 100 })
+          .toFile(thumbPath);
+
+        await writeFile(path.join(contentDir, mdFilename), markdown);
+      } else {
+        // Add files to batch commit for production
+        const thumbImageBuffer = await sharp(imageBuffer).resize(1920, null, { withoutEnlargement: true }).webp({ quality: 100 }).toBuffer();
+
+        if (filesToCommit) {
+          filesToCommit.push(
+            { path: `public/uploads/photos/${thumbFilename}`, content: thumbImageBuffer },
+            { path: `src/content/${category}/${mdFilename}`, content: Buffer.from(markdown) }
+          );
+        }
+      }
+
+      return {
+        success: true,
+        file: thumbFilename,
+        content: mdFilename
+      };
+    } else if (!isVideo) {
       // Optimize images: convert to WebP with high quality
       const webpFilename = filename.replace(/\.(jpg|jpeg|png)$/i, '.webp');
       const displayFilename = filename.replace(/\.(jpg|jpeg|png)$/i, '-display.webp');
